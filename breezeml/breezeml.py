@@ -2,7 +2,7 @@
 BreezeML: Beginner-friendly wrapper around scikit-learn
 
 Created by Akash Anipakalu Giridhar 🔥✨
-(PATCH: compute RMSE via sqrt(MSE) to support older scikit-learn versions without 'squared' kwarg)
+v0.1.2
 """
 import pandas as pd
 import numpy as np
@@ -75,7 +75,8 @@ def classify(df, target, algo="forest", return_report=True):
     model = RandomForestClassifier(random_state=42) if algo == "forest" else LogisticRegression(max_iter=200)
     pipe = Pipeline([("pre", pre), ("model", model)])
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)
+    stratify = y if (y.nunique() > 1 and y.nunique() < len(y)) else None
+    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=stratify, test_size=0.2, random_state=42)
     pipe.fit(X_train, y_train)
 
     em = EasyModel(pipe, target, "classification")
@@ -107,7 +108,7 @@ def regress(df, target, algo="forest", return_report=True):
     if not return_report:
         return em
     preds = pipe.predict(X_test)
-    mse = mean_squared_error(y_test, preds)  # avoid 'squared' kwarg for compatibility
+    mse = mean_squared_error(y_test, preds)  # support for older sklearn
     rmse = float(np.sqrt(mse))
     report = {
         "r2": float(r2_score(y_test, preds)),
