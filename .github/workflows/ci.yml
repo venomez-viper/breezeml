@@ -1,0 +1,37 @@
+name: BreezeML CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.9", "3.10", "3.11" ]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: 📦 Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: ✅ Run example demos (act as tests)
+        run: |
+          python examples/test_classification.py
+          python examples/test_regression.py
+          python examples/test_save_load.py
+          if [ -f examples/test_classifiers.py ]; then python examples/test_classifiers.py; fi
+          if [ -f examples/test_clustering.py ]; then python examples/test_clustering.py; fi
