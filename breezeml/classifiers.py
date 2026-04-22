@@ -194,16 +194,19 @@ def compare(df: pd.DataFrame, target: str, show: bool = True):
     >>> from breezeml import classifiers, datasets
     >>> results = classifiers.compare(datasets.iris(), "species")
     """
-    results = []
-    for name, factory in _CLASSIFIERS.items():
+    def _run_one(name, factory_func):
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                _, report = _train(factory(), df, target)
-            results.append({"classifier": name, **report})
+                _, report = _train(factory_func(), df, target)
+            return {"classifier": name, **report}
         except Exception:
-            # Some combos may fail (e.g. MultinomialNB with negative values)
-            results.append({"classifier": name, "accuracy": None, "f1": None})
+            return {"classifier": name, "accuracy": None, "f1": None}
+
+    from joblib import Parallel, delayed
+    results = Parallel(n_jobs=-1)(
+        delayed(_run_one)(name, factory) for name, factory in _CLASSIFIERS.items()
+    )
 
     # Sort: best accuracy first, None values at the bottom
     results.sort(key=lambda r: r["accuracy"] if r["accuracy"] is not None else -1, reverse=True)

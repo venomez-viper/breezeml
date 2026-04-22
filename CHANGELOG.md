@@ -5,6 +5,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [0.2.1] — Unreleased
+
+### Changed
+- **Massive Performance Boost for `classifiers.compare`**: We now utilize `joblib.Parallel(n_jobs=-1)` to train and evaluate all 12 baseline classification models concurrently across all available CPU cores. This effectively turns O(N) waiting time into O(1), drastically speeding up the model leaderboards on larger datasets.
+
 ## [0.2.0] — 2025-10-21
 
 ### Added
