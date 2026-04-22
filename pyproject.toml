@@ -8,24 +8,37 @@ version = "0.2.0"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akash@example.com" }
 ]
-description = "🌬️ BreezeML 🔥✨ — A beginner-friendly machine learning library built on scikit-learn."
+description = "BreezeML — Production-grade machine learning with zero boilerplate, built on scikit-learn."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.8"
 dependencies = [
-  "pandas",
-  "numpy",
-  "scikit-learn",
-  "joblib"
+  "pandas>=1.3",
+  "numpy>=1.21",
+  "scikit-learn>=1.0",
+  "joblib>=1.0"
 ]
-keywords = ["machine learning", "education", "scikit-learn", "beginner"]
+keywords = [
+  "machine learning", "scikit-learn", "automl", "classification",
+  "regression", "clustering", "beginner", "education", "data science"
+]
 classifiers = [
+  "Development Status :: 4 - Beta",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Intended Audience :: Education"
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research"
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov"]
 
 [project.urls]
 Homepage = "https://github.com/venomez-viper/breezeml"
