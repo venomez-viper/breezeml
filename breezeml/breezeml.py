@@ -2,7 +2,7 @@
 BreezeML: Beginner-friendly wrapper around scikit-learn
 
 Created by Akash Anipakalu Giridhar 🔥✨
-v0.2.2
+v0.2.4
 """
 import pandas as pd
 import numpy as np
@@ -171,7 +171,11 @@ def report(model, df):
 
 
 def save(model, path):
-    model.save(path)
+    if hasattr(model, "save"):
+        model.save(path)
+    else:
+        import joblib
+        joblib.dump(model, path)
 
 
 def load(path):
