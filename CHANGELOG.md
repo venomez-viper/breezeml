@@ -5,7 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
-## [0.2.4] — Unreleased
+## [0.2.5] — Unreleased
+
+### Fixed
+- **Linear SVM Class Imbalance**: Added `class_weight='balanced'` globally to all underlying `LinearSVC` initializations (`linear_svm`, `compare`, `detailed_report`). This forces the scikit-learn optimization engine to penalize misclassifications on tiny, sparse target classes effectively, skyrocketing F1-score performance out-of-the-box for highly skewed NLP classification datasets.
+
+## [0.2.4] — 2026-04-22
 
 ### Fixed
 - **Pipeline Save Bug**: Hot-patched `breezeml.save()` to dynamically check if the model object genuinely has a `.save()` method (like `EasyModel` does). If you pass it a raw strictly scikit-learn `Pipeline` (such as the return from classifiers module functions), it automatically falls back natively to `joblib.dump()`, preventing fatal `AttributeError` tracebacks.
