@@ -107,7 +107,7 @@ def svm(df: pd.DataFrame = None, target: str = None, kernel: str = "rbf", C: flo
 
 def linear_svm(df: pd.DataFrame = None, target: str = None, C: float = 1.0, *, X=None, y=None):
     """Linear SVM (LinearSVC)."""
-    return _train(LinearSVC(C=C), df=df, target=target, X=X, y=y)
+    return _train(LinearSVC(C=C, dual=False), df=df, target=target, X=X, y=y)
 
 
 def gaussian_nb(df: pd.DataFrame = None, target: str = None, *, X=None, y=None):
@@ -174,7 +174,7 @@ def mlp(df: pd.DataFrame = None, target: str = None, hidden_layer_sizes=(100,), 
 _CLASSIFIERS = {
     "Logistic Regression":   lambda: LogisticRegression(max_iter=500),
     "SVM (RBF)":             lambda: SVC(probability=True),
-    "Linear SVM":            lambda: LinearSVC(),
+    "Linear SVM":            lambda: LinearSVC(dual=False),
     "Gaussian NB":           lambda: GaussianNB(),
     "Decision Tree":         lambda: DecisionTreeClassifier(random_state=42),
     "Random Forest":         lambda: RandomForestClassifier(n_estimators=200, random_state=42),
@@ -264,7 +264,7 @@ def detailed_report(df: pd.DataFrame = None, target: str = None, model=None, alg
     _ALGO_MAP = {
         "logistic":           lambda: LogisticRegression(max_iter=500),
         "svm":                lambda: SVC(probability=True),
-        "linear_svm":         lambda: LinearSVC(),
+        "linear_svm":         lambda: LinearSVC(dual=False),
         "gaussian_nb":        lambda: GaussianNB(),
         "decision_tree":      lambda: DecisionTreeClassifier(random_state=42),
         "random_forest":      lambda: RandomForestClassifier(n_estimators=200, random_state=42),

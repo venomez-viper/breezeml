@@ -5,10 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
-## [0.2.2] — Unreleased
+## [0.2.3] — 2026-04-22
 
 ### Added
-- **Sparse Matrix and NumPy Array Support**: The `classifiers` module functions (`linear_svm`, `compare`, etc.) now directly accept `X` and `y` keyword parameters. This allows users pre-generating text features (like TF-IDF sparse matrices from `scipy.sparse`) to bypass DataFrame mapping entirely, preventing out-of-memory crashes by negating the need to call memory-heavy `toarray()` functions on compressed vectors!
+- **Sparse Matrix Support**: The `classifiers` module (`linear_svm`, `compare`, `detailed_report`) now directly accepts `X` and `y` keyword parameters (`classifiers.func(X=X, y=y)`) to natively process `scipy.sparse` matrices, bypassing dense Pandas conversion bottlenecks.
+
+### Fixed
+- **Linear SVM Primal Formulation**: Hand-patched all `LinearSVC` references with `dual=False`. This overrides the default scikit-learn Dual Formulation math trap when datasets have highly-dimensional sparse text vectors (n_samples > n_features), solving 20+ minute memory deadlocks and reducing training time to < 2 seconds.
 
 ## [0.2.1] — 2026-04-22
 
