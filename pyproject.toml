@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "breezeml"
-version = "0.2.1"
+version = "0.2.2"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akash@example.com" }
 ]

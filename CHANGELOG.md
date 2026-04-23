@@ -5,7 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
-## [0.2.1] — Unreleased
+## [0.2.2] — Unreleased
+
+### Added
+- **Sparse Matrix and NumPy Array Support**: The `classifiers` module functions (`linear_svm`, `compare`, etc.) now directly accept `X` and `y` keyword parameters. This allows users pre-generating text features (like TF-IDF sparse matrices from `scipy.sparse`) to bypass DataFrame mapping entirely, preventing out-of-memory crashes by negating the need to call memory-heavy `toarray()` functions on compressed vectors!
+
+## [0.2.1] — 2026-04-22
 
 ### Changed
 - **Massive Performance Boost for `classifiers.compare`**: We now utilize `joblib.Parallel(n_jobs=-1)` to train and evaluate all 12 baseline classification models concurrently across all available CPU cores. This effectively turns O(N) waiting time into O(1), drastically speeding up the model leaderboards on larger datasets.

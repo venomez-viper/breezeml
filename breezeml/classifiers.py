@@ -1,7 +1,9 @@
 """
-BreezeML Classifiers (v0.2.0)
+BreezeML Classifiers (v0.2.2)
 Easy wrappers for popular classification algorithms with sensible preprocessing.
 
+New in v0.2.2:
+  - Support for direct X and y array inputs (sparse/dense).
 New in v0.2.0:
   - 5 new classifiers: knn, gradient_boosting, adaboost, extra_trees, mlp
   - compare()        → run all classifiers and rank them in one line
@@ -61,20 +63,28 @@ def _preprocessor(num_cols, cat_cols):
     ])
 
 
-def _train(model, df: pd.DataFrame, target: str):
+def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None):
     """Train a classifier and return (pipeline, report).
 
     The report contains accuracy and weighted F1.
     """
-    X = df.drop(columns=[target])
-    y = df[target]
-    num_cols, cat_cols = _detect_types(df, target)
-    pre = _preprocessor(num_cols, cat_cols)
-    pipe = Pipeline([("pre", pre), ("model", model)])
+    if X is not None and y is not None:
+        y_series = pd.Series(y) if not isinstance(y, pd.Series) else y
+        stratify = y_series if (y_series.nunique() > 1 and y_series.nunique() < len(y_series)) else None
+        X_tr, X_te, y_tr, y_te = train_test_split(X, y_series, test_size=0.2, random_state=42, stratify=stratify)
+        pipe = Pipeline([("model", model)])
+        pipe.fit(X_tr, y_tr)
+    else:
+        X_df = df.drop(columns=[target])
+        y_df = df[target]
+        num_cols, cat_cols = _detect_types(df, target)
+        pre = _preprocessor(num_cols, cat_cols)
+        pipe = Pipeline([("pre", pre), ("model", model)])
 
-    stratify = y if (y.nunique() > 1 and y.nunique() < len(y)) else None
-    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=stratify)
-    pipe.fit(X_tr, y_tr)
+        stratify = y_df if (y_df.nunique() > 1 and y_df.nunique() < len(y_df)) else None
+        X_tr, X_te, y_tr, y_te = train_test_split(X_df, y_df, test_size=0.2, random_state=42, stratify=stratify)
+        pipe.fit(X_tr, y_tr)
+        
     pred = pipe.predict(X_te)
     report = {
         "accuracy": round(float(accuracy_score(y_te, pred)), 4),
@@ -85,76 +95,76 @@ def _train(model, df: pd.DataFrame, target: str):
 
 # ─── Individual Classifiers ──────────────────────────────────────────────────
 
-def logistic(df: pd.DataFrame, target: str, max_iter: int = 500):
+def logistic(df: pd.DataFrame = None, target: str = None, max_iter: int = 500, *, X=None, y=None):
     """Logistic Regression classifier."""
-    return _train(LogisticRegression(max_iter=max_iter), df, target)
+    return _train(LogisticRegression(max_iter=max_iter), df=df, target=target, X=X, y=y)
 
 
-def svm(df: pd.DataFrame, target: str, kernel: str = "rbf", C: float = 1.0, gamma: str | float = "scale"):
+def svm(df: pd.DataFrame = None, target: str = None, kernel: str = "rbf", C: float = 1.0, gamma: str | float = "scale", *, X=None, y=None):
     """Support Vector Machine (SVC) classifier."""
-    return _train(SVC(kernel=kernel, C=C, gamma=gamma, probability=True), df, target)
+    return _train(SVC(kernel=kernel, C=C, gamma=gamma, probability=True), df=df, target=target, X=X, y=y)
 
 
-def linear_svm(df: pd.DataFrame, target: str, C: float = 1.0):
+def linear_svm(df: pd.DataFrame = None, target: str = None, C: float = 1.0, *, X=None, y=None):
     """Linear SVM (LinearSVC)."""
-    return _train(LinearSVC(C=C), df, target)
+    return _train(LinearSVC(C=C), df=df, target=target, X=X, y=y)
 
 
-def gaussian_nb(df: pd.DataFrame, target: str):
+def gaussian_nb(df: pd.DataFrame = None, target: str = None, *, X=None, y=None):
     """Gaussian Naïve Bayes — good for numeric features."""
-    return _train(GaussianNB(), df, target)
+    return _train(GaussianNB(), df=df, target=target, X=X, y=y)
 
 
-def multinomial_nb(df: pd.DataFrame, target: str, alpha: float = 1.0):
+def multinomial_nb(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, *, X=None, y=None):
     """Multinomial Naïve Bayes — good for counts/TF-IDF (non-negative)."""
-    return _train(MultinomialNB(alpha=alpha), df, target)
+    return _train(MultinomialNB(alpha=alpha), df=df, target=target, X=X, y=y)
 
 
-def decision_tree(df: pd.DataFrame, target: str, random_state: int = 42, max_depth: int | None = None):
+def decision_tree(df: pd.DataFrame = None, target: str = None, random_state: int = 42, max_depth: int | None = None, *, X=None, y=None):
     """Decision Tree classifier."""
-    return _train(DecisionTreeClassifier(random_state=random_state, max_depth=max_depth), df, target)
+    return _train(DecisionTreeClassifier(random_state=random_state, max_depth=max_depth), df=df, target=target, X=X, y=y)
 
 
-def random_forest(df: pd.DataFrame, target: str, n_estimators: int = 200, random_state: int = 42):
+def random_forest(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, random_state: int = 42, *, X=None, y=None):
     """Random Forest classifier."""
-    return _train(RandomForestClassifier(n_estimators=n_estimators, random_state=random_state), df, target)
+    return _train(RandomForestClassifier(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y)
 
 
 # ── NEW in v0.2.0 ────────────────────────────────────────────────────────────
 
-def knn(df: pd.DataFrame, target: str, n_neighbors: int = 5):
+def knn(df: pd.DataFrame = None, target: str = None, n_neighbors: int = 5, *, X=None, y=None):
     """K-Nearest Neighbors classifier."""
-    return _train(KNeighborsClassifier(n_neighbors=n_neighbors), df, target)
+    return _train(KNeighborsClassifier(n_neighbors=n_neighbors), df=df, target=target, X=X, y=y)
 
 
-def gradient_boosting(df: pd.DataFrame, target: str, n_estimators: int = 200, learning_rate: float = 0.1,
-                      random_state: int = 42):
+def gradient_boosting(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, learning_rate: float = 0.1,
+                      random_state: int = 42, *, X=None, y=None):
     """Gradient Boosting classifier — often the most accurate out-of-the-box."""
     return _train(
         GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, random_state=random_state),
-        df, target,
+        df=df, target=target, X=X, y=y
     )
 
 
-def adaboost(df: pd.DataFrame, target: str, n_estimators: int = 100, learning_rate: float = 1.0,
-             random_state: int = 42):
+def adaboost(df: pd.DataFrame = None, target: str = None, n_estimators: int = 100, learning_rate: float = 1.0,
+             random_state: int = 42, *, X=None, y=None):
     """AdaBoost classifier — boosts weak learners sequentially."""
     return _train(
         AdaBoostClassifier(n_estimators=n_estimators, learning_rate=learning_rate, random_state=random_state),
-        df, target,
+        df=df, target=target, X=X, y=y
     )
 
 
-def extra_trees(df: pd.DataFrame, target: str, n_estimators: int = 200, random_state: int = 42):
+def extra_trees(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, random_state: int = 42, *, X=None, y=None):
     """Extra Trees (Extremely Randomized Trees) classifier."""
-    return _train(ExtraTreesClassifier(n_estimators=n_estimators, random_state=random_state), df, target)
+    return _train(ExtraTreesClassifier(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y)
 
 
-def mlp(df: pd.DataFrame, target: str, hidden_layer_sizes=(100,), max_iter: int = 500, random_state: int = 42):
+def mlp(df: pd.DataFrame = None, target: str = None, hidden_layer_sizes=(100,), max_iter: int = 500, random_state: int = 42, *, X=None, y=None):
     """Multi-Layer Perceptron (Neural Network) classifier."""
     return _train(
         MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=max_iter, random_state=random_state),
-        df, target,
+        df=df, target=target, X=X, y=y
     )
 
 
@@ -176,7 +186,7 @@ _CLASSIFIERS = {
 }
 
 
-def compare(df: pd.DataFrame, target: str, show: bool = True):
+def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, *, X=None, y=None):
     """Run every classifier on *df* and return results sorted by accuracy.
 
     Parameters
@@ -198,7 +208,7 @@ def compare(df: pd.DataFrame, target: str, show: bool = True):
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                _, report = _train(factory_func(), df, target)
+                _, report = _train(factory_func(), df=df, target=target, X=X, y=y)
             return {"classifier": name, **report}
         except Exception:
             return {"classifier": name, "accuracy": None, "f1": None}
@@ -226,7 +236,7 @@ def compare(df: pd.DataFrame, target: str, show: bool = True):
 
 # ─── detailed_report() — Full metrics for any trained classifier ─────────────
 
-def detailed_report(df: pd.DataFrame, target: str, model=None, algo: str = "random_forest"):
+def detailed_report(df: pd.DataFrame = None, target: str = None, model=None, algo: str = "random_forest", *, X=None, y=None):
     """Get a detailed classification report with everything a beginner needs.
 
     Pass an already-trained *model* (pipeline), or let it train one via *algo*.
@@ -265,22 +275,36 @@ def detailed_report(df: pd.DataFrame, target: str, model=None, algo: str = "rand
         "mlp":                lambda: MLPClassifier(max_iter=500, random_state=42),
     }
 
-    X = df.drop(columns=[target])
-    y = df[target]
-    num_cols, cat_cols = _detect_types(df, target)
-    pre = _preprocessor(num_cols, cat_cols)
+    if X is not None and y is not None:
+        y_series = pd.Series(y) if not isinstance(y, pd.Series) else y
+        stratify = y_series if (y_series.nunique() > 1 and y_series.nunique() < len(y_series)) else None
+        X_tr, X_te, y_tr, y_te = train_test_split(X, y_series, test_size=0.2, random_state=42, stratify=stratify)
 
-    stratify = y if (y.nunique() > 1 and y.nunique() < len(y)) else None
-    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=stratify)
-
-    if model is None:
-        factory = _ALGO_MAP.get(algo)
-        if factory is None:
-            raise ValueError(f"Unknown algo '{algo}'. Choose from: {list(_ALGO_MAP.keys())}")
-        pipe = Pipeline([("pre", pre), ("model", factory())])
-        pipe.fit(X_tr, y_tr)
+        if model is None:
+            factory = _ALGO_MAP.get(algo)
+            if factory is None:
+                raise ValueError(f"Unknown algo '{algo}'. Choose from: {list(_ALGO_MAP.keys())}")
+            pipe = Pipeline([("model", factory())])
+            pipe.fit(X_tr, y_tr)
+        else:
+            pipe = model
     else:
-        pipe = model
+        X_df = df.drop(columns=[target])
+        y_df = df[target]
+        num_cols, cat_cols = _detect_types(df, target)
+        pre = _preprocessor(num_cols, cat_cols)
+
+        stratify = y_df if (y_df.nunique() > 1 and y_df.nunique() < len(y_df)) else None
+        X_tr, X_te, y_tr, y_te = train_test_split(X_df, y_df, test_size=0.2, random_state=42, stratify=stratify)
+
+        if model is None:
+            factory = _ALGO_MAP.get(algo)
+            if factory is None:
+                raise ValueError(f"Unknown algo '{algo}'. Choose from: {list(_ALGO_MAP.keys())}")
+            pipe = Pipeline([("pre", pre), ("model", factory())])
+            pipe.fit(X_tr, y_tr)
+        else:
+            pipe = model
 
     pred = pipe.predict(X_te)
 
@@ -375,8 +399,8 @@ _ALGO_FACTORIES = {
 }
 
 
-def quick_tune(df: pd.DataFrame, target: str, algo: str = "random_forest",
-               n_iter: int = 20, cv: int = 3, scoring: str = "accuracy"):
+def quick_tune(df: pd.DataFrame = None, target: str = None, algo: str = "random_forest",
+               n_iter: int = 20, cv: int = 3, scoring: str = "accuracy", *, X=None, y=None):
     """Auto-tune a classifier's hyperparameters in one line.
 
     Parameters
@@ -408,14 +432,20 @@ def quick_tune(df: pd.DataFrame, target: str, algo: str = "random_forest",
     if factory is None or param_grid is None:
         raise ValueError(f"Unknown algo '{algo}'. Choose from: {list(_ALGO_FACTORIES.keys())}")
 
-    X = df.drop(columns=[target])
-    y = df[target]
-    num_cols, cat_cols = _detect_types(df, target)
-    pre = _preprocessor(num_cols, cat_cols)
-    pipe = Pipeline([("pre", pre), ("model", factory())])
+    if X is not None and y is not None:
+        y_series = pd.Series(y) if not isinstance(y, pd.Series) else y
+        pipe = Pipeline([("model", factory())])
+        stratify = y_series if (y_series.nunique() > 1 and y_series.nunique() < len(y_series)) else None
+        X_tr, X_te, y_tr, y_te = train_test_split(X, y_series, test_size=0.2, random_state=42, stratify=stratify)
+    else:
+        X_df = df.drop(columns=[target])
+        y_df = df[target]
+        num_cols, cat_cols = _detect_types(df, target)
+        pre = _preprocessor(num_cols, cat_cols)
+        pipe = Pipeline([("pre", pre), ("model", factory())])
 
-    stratify = y if (y.nunique() > 1 and y.nunique() < len(y)) else None
-    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=stratify)
+        stratify = y_df if (y_df.nunique() > 1 and y_df.nunique() < len(y_df)) else None
+        X_tr, X_te, y_tr, y_te = train_test_split(X_df, y_df, test_size=0.2, random_state=42, stratify=stratify)
 
     # Cap n_iter to actual grid size so we don't get warnings
     from itertools import product as _product
