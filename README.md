@@ -57,6 +57,9 @@ That's it. No manual train/test splits. No encoder boilerplate. No metric aggreg
 | **Seamless CSV ingestion** | `from_csv("data.csv", target="price")` handles loading, preprocessing, and training |
 | **Model persistence** | `save()` / `load()` powered by `joblib` |
 | **Fully type-hinted** | Clean, IDE-friendly API surface |
+| **Cascade classification** *(v0.2.6)* | Chain multiple BreezeML models into a hierarchical cascade for fine-grained multi-level classification |
+| **External test sets** *(v0.2.6)* | Pass `X_test` / `y_test` to any classifier to evaluate on your own held-out split |
+| **Macro F1 in all reports** *(v0.2.6)* | Every report dict now includes `macro_f1` alongside weighted F1 |
 
 ---
 
@@ -260,6 +263,47 @@ print(report)   # {'accuracy': 1.0, 'f1': 1.0}
 
 Supported algorithms: `logistic`, `svm`, `knn`, `decision_tree`, `random_forest`, `gradient_boosting`, `adaboost`, `extra_trees`, `mlp`
 
+#### `classifiers.logistic_regression` / `classifiers.naive_bayes` — Aliases
+
+`logistic_regression` is an alias for `logistic()`. `naive_bayes` is an alias for `multinomial_nb()`.
+
+---
+
+### Cascade Classification *(new in v0.2.6)*
+
+A **cascade** chains multiple BreezeML classifiers into a hierarchical pipeline where each level narrows the prediction space. This pattern is especially powerful for fine-grained taxonomies — e.g., predicting an industry code (145 classes) by first predicting the sector (11 classes) and group (25 classes) at intermediate levels.
+
+**Real-world result:** a 3-level cascade Linear SVM built with BreezeML achieved **88.90% Macro F1** on a 145-class Morningstar industry classification task — a +29 percentage-point improvement over a flat single-level baseline.
+
+```python
+from breezeml import classifiers
+import joblib
+
+# Level 1 — predict broad sector (11 classes)
+m1, r1 = classifiers.linear_svm(X=X_train, y=y_sector, X_test=X_test, y_test=y_sector_test)
+print(r1)  # {'accuracy': 0.9412, 'f1': 0.9398, 'macro_f1': 0.9385}
+
+# Level 2 — predict group within sector (25 classes)
+m2, r2 = classifiers.linear_svm(X=X_train, y=y_group, X_test=X_test, y_test=y_group_test)
+
+# Level 3 — predict fine-grained code (145 classes)
+m3, r3 = classifiers.linear_svm(X=X_train, y=y_code, X_test=X_test, y_test=y_code_test)
+print(r3)  # {'accuracy': 0.8912, 'f1': 0.8901, 'macro_f1': 0.8890}
+
+# Cascade inference: combine predictions from all 3 levels
+sector_pred = m1.predict(X_test)
+group_pred  = m2.predict(X_test)
+code_pred   = m3.predict(X_test)
+
+# Save the full cascade
+joblib.dump({"sector": m1, "group": m2, "code": m3}, "cascade_model.joblib")
+```
+
+**When to use a cascade:**
+- Your target has a natural hierarchy (sector → group → leaf code)
+- You have 50+ classes and a single flat model saturates quickly
+- You want interpretability at each level of prediction
+
 ---
 
 ### `clustering` Module
@@ -330,6 +374,9 @@ All examples are in [`/examples`](examples/). Run them directly or open the Cola
 - [x] Hyperparameter auto-tuning (`quick_tune`)
 - [x] Detailed evaluation reports (confusion matrix, ROC-AUC)
 - [x] Clustering (K-Means, DBSCAN, Agglomerative)
+- [x] Cascade classification — hierarchical multi-level pipelines *(v0.2.6)*
+- [x] External test set support (`X_test` / `y_test`) on all classifiers *(v0.2.6)*
+- [x] Macro F1 in all report dicts *(v0.2.6)*
 - [ ] `explain()` — SHAP-based feature importance
 - [ ] Native plotting (`plot_confusion_matrix`, `plot_roc`)
 - [ ] Additional datasets (Titanic, MNIST subset)

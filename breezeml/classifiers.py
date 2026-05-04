@@ -1,7 +1,13 @@
 """
-BreezeML Classifiers (v0.2.2)
+BreezeML Classifiers (v0.2.6)
 Easy wrappers for popular classification algorithms with sensible preprocessing.
 
+New in v0.2.6:
+  - X_test / y_test parameters on every classifier — pass your own held-out set
+    instead of relying on the internal 80/20 split.
+  - macro_f1 added to every report dict alongside weighted F1.
+  - logistic_regression() alias for logistic().
+  - naive_bayes() alias for multinomial_nb() — optimised for TF-IDF text data.
 New in v0.2.2:
   - Support for direct X and y array inputs (sparse/dense).
 New in v0.2.0:
@@ -63,15 +69,21 @@ def _preprocessor(num_cols, cat_cols):
     ])
 
 
-def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None):
+def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None, X_test=None, y_test=None):
     """Train a classifier and return (pipeline, report).
 
-    The report contains accuracy and weighted F1.
+    The report contains accuracy, weighted F1, and macro F1.
+    Pass X_test / y_test to evaluate on your own held-out set instead of the internal 80/20 split.
     """
     if X is not None and y is not None:
         y_series = pd.Series(y) if not isinstance(y, pd.Series) else y
-        stratify = y_series if (y_series.nunique() > 1 and y_series.nunique() < len(y_series)) else None
-        X_tr, X_te, y_tr, y_te = train_test_split(X, y_series, test_size=0.2, random_state=42, stratify=stratify)
+        if X_test is not None and y_test is not None:
+            X_tr, y_tr = X, y_series
+            X_te = X_test
+            y_te = pd.Series(y_test) if not isinstance(y_test, pd.Series) else y_test
+        else:
+            stratify = y_series if (y_series.nunique() > 1 and y_series.nunique() < len(y_series)) else None
+            X_tr, X_te, y_tr, y_te = train_test_split(X, y_series, test_size=0.2, random_state=42, stratify=stratify)
         pipe = Pipeline([("model", model)])
         pipe.fit(X_tr, y_tr)
     else:
@@ -81,90 +93,96 @@ def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None):
         pre = _preprocessor(num_cols, cat_cols)
         pipe = Pipeline([("pre", pre), ("model", model)])
 
-        stratify = y_df if (y_df.nunique() > 1 and y_df.nunique() < len(y_df)) else None
-        X_tr, X_te, y_tr, y_te = train_test_split(X_df, y_df, test_size=0.2, random_state=42, stratify=stratify)
+        if X_test is not None and y_test is not None:
+            X_tr, y_tr = X_df, y_df
+            X_te = X_test
+            y_te = pd.Series(y_test) if not isinstance(y_test, pd.Series) else y_test
+        else:
+            stratify = y_df if (y_df.nunique() > 1 and y_df.nunique() < len(y_df)) else None
+            X_tr, X_te, y_tr, y_te = train_test_split(X_df, y_df, test_size=0.2, random_state=42, stratify=stratify)
         pipe.fit(X_tr, y_tr)
-        
+
     pred = pipe.predict(X_te)
     report = {
         "accuracy": round(float(accuracy_score(y_te, pred)), 4),
         "f1": round(float(f1_score(y_te, pred, average="weighted")), 4),
+        "macro_f1": round(float(f1_score(y_te, pred, average="macro", zero_division=0)), 4),
     }
     return pipe, report
 
 
 # ─── Individual Classifiers ──────────────────────────────────────────────────
 
-def logistic(df: pd.DataFrame = None, target: str = None, max_iter: int = 500, *, X=None, y=None):
+def logistic(df: pd.DataFrame = None, target: str = None, max_iter: int = 500, *, X=None, y=None, X_test=None, y_test=None):
     """Logistic Regression classifier."""
-    return _train(LogisticRegression(max_iter=max_iter), df=df, target=target, X=X, y=y)
+    return _train(LogisticRegression(max_iter=max_iter), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def svm(df: pd.DataFrame = None, target: str = None, kernel: str = "rbf", C: float = 1.0, gamma: str | float = "scale", *, X=None, y=None):
+def svm(df: pd.DataFrame = None, target: str = None, kernel: str = "rbf", C: float = 1.0, gamma: str | float = "scale", *, X=None, y=None, X_test=None, y_test=None):
     """Support Vector Machine (SVC) classifier."""
-    return _train(SVC(kernel=kernel, C=C, gamma=gamma, probability=True), df=df, target=target, X=X, y=y)
+    return _train(SVC(kernel=kernel, C=C, gamma=gamma, probability=True), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def linear_svm(df: pd.DataFrame = None, target: str = None, C: float = 1.0, *, X=None, y=None):
+def linear_svm(df: pd.DataFrame = None, target: str = None, C: float = 1.0, *, X=None, y=None, X_test=None, y_test=None):
     """Linear SVM (LinearSVC)."""
-    return _train(LinearSVC(C=C, dual=False, class_weight='balanced'), df=df, target=target, X=X, y=y)
+    return _train(LinearSVC(C=C, dual=False, class_weight='balanced'), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def gaussian_nb(df: pd.DataFrame = None, target: str = None, *, X=None, y=None):
+def gaussian_nb(df: pd.DataFrame = None, target: str = None, *, X=None, y=None, X_test=None, y_test=None):
     """Gaussian Naïve Bayes — good for numeric features."""
-    return _train(GaussianNB(), df=df, target=target, X=X, y=y)
+    return _train(GaussianNB(), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def multinomial_nb(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, *, X=None, y=None):
+def multinomial_nb(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, *, X=None, y=None, X_test=None, y_test=None):
     """Multinomial Naïve Bayes — good for counts/TF-IDF (non-negative)."""
-    return _train(MultinomialNB(alpha=alpha), df=df, target=target, X=X, y=y)
+    return _train(MultinomialNB(alpha=alpha), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def decision_tree(df: pd.DataFrame = None, target: str = None, random_state: int = 42, max_depth: int | None = None, *, X=None, y=None):
+def decision_tree(df: pd.DataFrame = None, target: str = None, random_state: int = 42, max_depth: int | None = None, *, X=None, y=None, X_test=None, y_test=None):
     """Decision Tree classifier."""
-    return _train(DecisionTreeClassifier(random_state=random_state, max_depth=max_depth), df=df, target=target, X=X, y=y)
+    return _train(DecisionTreeClassifier(random_state=random_state, max_depth=max_depth), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def random_forest(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, random_state: int = 42, *, X=None, y=None):
+def random_forest(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None):
     """Random Forest classifier."""
-    return _train(RandomForestClassifier(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y)
+    return _train(RandomForestClassifier(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
 # ── NEW in v0.2.0 ────────────────────────────────────────────────────────────
 
-def knn(df: pd.DataFrame = None, target: str = None, n_neighbors: int = 5, *, X=None, y=None):
+def knn(df: pd.DataFrame = None, target: str = None, n_neighbors: int = 5, *, X=None, y=None, X_test=None, y_test=None):
     """K-Nearest Neighbors classifier."""
-    return _train(KNeighborsClassifier(n_neighbors=n_neighbors), df=df, target=target, X=X, y=y)
+    return _train(KNeighborsClassifier(n_neighbors=n_neighbors), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
 def gradient_boosting(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, learning_rate: float = 0.1,
-                      random_state: int = 42, *, X=None, y=None):
+                      random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None):
     """Gradient Boosting classifier — often the most accurate out-of-the-box."""
     return _train(
         GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, random_state=random_state),
-        df=df, target=target, X=X, y=y
+        df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test
     )
 
 
 def adaboost(df: pd.DataFrame = None, target: str = None, n_estimators: int = 100, learning_rate: float = 1.0,
-             random_state: int = 42, *, X=None, y=None):
+             random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None):
     """AdaBoost classifier — boosts weak learners sequentially."""
     return _train(
         AdaBoostClassifier(n_estimators=n_estimators, learning_rate=learning_rate, random_state=random_state),
-        df=df, target=target, X=X, y=y
+        df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test
     )
 
 
-def extra_trees(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, random_state: int = 42, *, X=None, y=None):
+def extra_trees(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None):
     """Extra Trees (Extremely Randomized Trees) classifier."""
-    return _train(ExtraTreesClassifier(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y)
+    return _train(ExtraTreesClassifier(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def mlp(df: pd.DataFrame = None, target: str = None, hidden_layer_sizes=(100,), max_iter: int = 500, random_state: int = 42, *, X=None, y=None):
+def mlp(df: pd.DataFrame = None, target: str = None, hidden_layer_sizes=(100,), max_iter: int = 500, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None):
     """Multi-Layer Perceptron (Neural Network) classifier."""
     return _train(
         MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=max_iter, random_state=random_state),
-        df=df, target=target, X=X, y=y
+        df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test
     )
 
 
@@ -328,6 +346,7 @@ def detailed_report(df: pd.DataFrame = None, target: str = None, model=None, alg
     result = {
         "accuracy":              round(float(accuracy_score(y_te, pred)), 4),
         "f1":                    round(float(f1_score(y_te, pred, average="weighted")), 4),
+        "macro_f1":              round(float(f1_score(y_te, pred, average="macro", zero_division=0)), 4),
         "precision":             round(float(precision_score(y_te, pred, average="weighted", zero_division=0)), 4),
         "recall":                round(float(recall_score(y_te, pred, average="weighted", zero_division=0)), 4),
         "roc_auc":               roc,
@@ -469,9 +488,16 @@ def quick_tune(df: pd.DataFrame = None, target: str = None, algo: str = "random_
     report = {
         "accuracy": round(float(accuracy_score(y_te, pred)), 4),
         "f1": round(float(f1_score(y_te, pred, average="weighted")), 4),
+        "macro_f1": round(float(f1_score(y_te, pred, average="macro", zero_division=0)), 4),
     }
 
     print(f"✅ Best params for {algo}: {best_params}")
-    print(f"   Accuracy: {report['accuracy']}  |  F1: {report['f1']}")
+    print(f"   Accuracy: {report['accuracy']}  |  F1: {report['f1']}  |  Macro F1: {report['macro_f1']}")
 
     return best_pipe, best_params, report
+
+
+# ─── Aliases ─────────────────────────────────────────────────────────────────
+
+logistic_regression = logistic
+naive_bayes = multinomial_nb
