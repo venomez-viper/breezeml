@@ -5,9 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
-## [0.2.9] — Unreleased
+## [0.2.9] — 2026-05-07
 
 ### Added
+- **Semantic Text Embeddings**: Added `breezeml.text` to natively convert raw text columns into dense semantic vectors via `sentence-transformers`.
+- **Explainability**: Added `breezeml.explain` to instantly generate SHAP feature importance plots.
+- **Native Plotting**: Added `breezeml.plot` for generating `matplotlib` confusion matrices and ROC curves in one line.
+- **MkDocs Site**: Prepared an ultra-premium `mkdocs-material` documentation website.
 - **Manual Task Override**: `fit()` and `auto()` now accept a `task` parameter (`"classification"`, `"regression"`, or `"auto"`) to manually override automatic task detection.
 - **Ruff Linting**: Integrated `ruff` into the CI pipeline.
 - **Extended Test Matrix**: GitHub Actions CI now runs against Python 3.9 through 3.13.
