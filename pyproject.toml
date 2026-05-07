@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "breezeml"
-version = "0.2.7"
+version = "0.2.8"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akash@example.com" }
 ]
@@ -37,7 +37,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-cov"]
+dev = ["pytest>=7.0", "pytest-cov", "ruff"]
 
 [project.urls]
 Homepage = "https://github.com/venomez-viper/breezeml"

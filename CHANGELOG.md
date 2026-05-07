@@ -5,7 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
-## [0.2.7] — Unreleased
+## [0.2.8] — Unreleased
+
+### Added
+- **Manual Task Override**: `fit()` and `auto()` now accept a `task` parameter (`"classification"`, `"regression"`, or `"auto"`) to manually override automatic task detection.
+- **Ruff Linting**: Integrated `ruff` into the CI pipeline.
+- **Extended Test Matrix**: GitHub Actions CI now runs against Python 3.9 through 3.13.
+
+### Changed
+- **Deduplicated Preprocessing**: Centralized identical imputation and encoding logic into `breezeml/_preprocessing.py` to follow DRY principles.
+
+### Fixed
+- **Multinomial Naïve Bayes**: Gracefully accepts data with negative features by internally shifting to `MinMaxScaler` instead of crashing on the default `StandardScaler`.
+
+## [0.2.7] — 2026-05-07
 
 ### Added
 - **Test Suite**: Added `tests/` directory with a proper `pytest` suite for input validation, core functions, and classifiers.

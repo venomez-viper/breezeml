@@ -2,18 +2,16 @@
 BreezeML: Beginner-friendly wrapper around scikit-learn
 
 Created by Akash Anipakalu Giridhar 🔥✨
-v0.2.7
+v0.2.8
 """
 import pandas as pd
 import numpy as np
 import joblib
 
 from ._validation import check_df_target
+from ._preprocessing import _detect_types, _build_preprocessor
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LogisticRegression, LinearRegression
@@ -46,26 +44,7 @@ class EasyModel:
         return joblib.load(path)
 
 
-def _detect_types(df, target):
-    X = df.drop(columns=[target])
-    numeric = X.select_dtypes(include=[np.number]).columns
-    categorical = X.select_dtypes(exclude=[np.number]).columns
-    return list(numeric), list(categorical)
 
-
-def _build_preprocessor(numeric, categorical):
-    num_pipe = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler())
-    ])
-    cat_pipe = Pipeline([
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("onehot", OneHotEncoder(handle_unknown="ignore"))
-    ])
-    return ColumnTransformer([
-        ("num", num_pipe, numeric),
-        ("cat", cat_pipe, categorical)
-    ])
 
 
 def classify(df, target, algo="forest", return_report=True):
@@ -122,13 +101,8 @@ def regress(df, target, algo="forest", return_report=True):
     return em, report
 
 
-def fit(df, target):
-    check_df_target(df, target)
-    y = df[target]
-    if y.dtype == "object" or y.nunique() < 20:
-        m, _ = classify(df, target)
-    else:
-        m, _ = regress(df, target)
+def fit(df, target, task="auto"):
+    m, _ = auto(df, target, task=task)
     return m
 
 
@@ -172,10 +146,16 @@ def load(path):
     return EasyModel.load(path)
 
 
-def auto(df, target):
+def auto(df, target, task="auto"):
     """Automatically pick classification or regression based on target."""
     check_df_target(df, target)
     y = df[target]
+    
+    if task == "classification":
+        return classify(df, target)
+    elif task == "regression":
+        return regress(df, target)
+        
     if y.dtype == "object" or y.nunique() < 20:
         return classify(df, target)
     else:

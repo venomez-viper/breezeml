@@ -1,5 +1,5 @@
 """
-BreezeML Classifiers (v0.2.7)
+BreezeML Classifiers (v0.2.8)
 Easy wrappers for popular classification algorithms with sensible preprocessing.
 
 New in v0.2.6:
@@ -28,6 +28,7 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 from ._validation import check_df_target
+from ._preprocessing import _detect_types, _build_preprocessor
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 from sklearn.impute import SimpleImputer
@@ -48,29 +49,10 @@ from sklearn.neural_network import MLPClassifier
 
 # ─── Internal Helpers ────────────────────────────────────────────────────────
 
-def _detect_types(df: pd.DataFrame, target: str):
-    X = df.drop(columns=[target])
-    num_cols = X.select_dtypes(include=[np.number]).columns.tolist()
-    cat_cols = X.select_dtypes(exclude=[np.number]).columns.tolist()
-    return num_cols, cat_cols
 
 
-def _preprocessor(num_cols, cat_cols):
-    num = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scale", StandardScaler())
-    ])
-    cat = Pipeline([
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("onehot", OneHotEncoder(handle_unknown="ignore"))
-    ])
-    return ColumnTransformer([
-        ("num", num, num_cols),
-        ("cat", cat, cat_cols)
-    ])
 
-
-def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None, X_test=None, y_test=None):
+def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None, X_test=None, y_test=None, force_minmax=False):
     """Train a classifier and return (pipeline, report).
 
     The report contains accuracy, weighted F1, and macro F1.
@@ -92,7 +74,7 @@ def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None, X
         X_df = df.drop(columns=[target])
         y_df = df[target]
         num_cols, cat_cols = _detect_types(df, target)
-        pre = _preprocessor(num_cols, cat_cols)
+        pre = _build_preprocessor(num_cols, cat_cols, force_minmax=force_minmax)
         pipe = Pipeline([("pre", pre), ("model", model)])
 
         if X_test is not None and y_test is not None:
@@ -137,7 +119,7 @@ def gaussian_nb(df: pd.DataFrame = None, target: str = None, *, X=None, y=None, 
 
 def multinomial_nb(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, *, X=None, y=None, X_test=None, y_test=None):
     """Multinomial Naïve Bayes — good for counts/TF-IDF (non-negative)."""
-    return _train(MultinomialNB(alpha=alpha), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
+    return _train(MultinomialNB(alpha=alpha), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, force_minmax=True)
 
 
 def decision_tree(df: pd.DataFrame = None, target: str = None, random_state: int = 42, max_depth: int | None = None, *, X=None, y=None, X_test=None, y_test=None):
@@ -231,9 +213,11 @@ def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, *, X
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                _, report = _train(factory_func(), df=df, target=target, X=X, y=y)
+                force = (name == "Multinomial NB")
+                _, report = _train(factory_func(), df=df, target=target, X=X, y=y, force_minmax=force)
             return {"classifier": name, **report}
-        except Exception:
+        except Exception as e:
+            print(f"Warning: {name} failed with error: {e}")
             return {"classifier": name, "accuracy": None, "f1": None}
 
     from joblib import Parallel, delayed
@@ -292,6 +276,7 @@ def detailed_report(df: pd.DataFrame = None, target: str = None, model=None, alg
         "svm":                lambda: SVC(probability=True),
         "linear_svm":         lambda: LinearSVC(dual=False, class_weight='balanced'),
         "gaussian_nb":        lambda: GaussianNB(),
+        "multinomial_nb":     lambda: MultinomialNB(),
         "decision_tree":      lambda: DecisionTreeClassifier(random_state=42),
         "random_forest":      lambda: RandomForestClassifier(n_estimators=200, random_state=42),
         "knn":                lambda: KNeighborsClassifier(),
@@ -318,7 +303,7 @@ def detailed_report(df: pd.DataFrame = None, target: str = None, model=None, alg
         X_df = df.drop(columns=[target])
         y_df = df[target]
         num_cols, cat_cols = _detect_types(df, target)
-        pre = _preprocessor(num_cols, cat_cols)
+        pre = _build_preprocessor(num_cols, cat_cols, force_minmax=(algo == "multinomial_nb"))
 
         stratify = y_df if (y_df.nunique() > 1 and y_df.nunique() < len(y_df)) else None
         X_tr, X_te, y_tr, y_te = train_test_split(X_df, y_df, test_size=0.2, random_state=42, stratify=stratify)
@@ -423,6 +408,7 @@ _ALGO_FACTORIES = {
     "adaboost":           lambda: AdaBoostClassifier(random_state=42),
     "extra_trees":        lambda: ExtraTreesClassifier(random_state=42),
     "mlp":                lambda: MLPClassifier(random_state=42),
+    "multinomial_nb":     lambda: MultinomialNB(),
 }
 
 
@@ -471,7 +457,7 @@ def quick_tune(df: pd.DataFrame = None, target: str = None, algo: str = "random_
         X_df = df.drop(columns=[target])
         y_df = df[target]
         num_cols, cat_cols = _detect_types(df, target)
-        pre = _preprocessor(num_cols, cat_cols)
+        pre = _build_preprocessor(num_cols, cat_cols, force_minmax=(algo == "multinomial_nb"))
         pipe = Pipeline([("pre", pre), ("model", factory())])
 
         stratify = y_df if (y_df.nunique() > 1 and y_df.nunique() < len(y_df)) else None
