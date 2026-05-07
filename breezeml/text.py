@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pandas as pd
 
 def embed(df: pd.DataFrame, text_columns: list | str, model_name: str = "all-MiniLM-L6-v2") -> pd.DataFrame:
