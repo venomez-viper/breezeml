@@ -125,7 +125,6 @@ def polynomial(df: pd.DataFrame, degree: int = 2, columns: list[str] | None = No
     names = poly.get_feature_names_out(target_columns)
     poly_df = pd.DataFrame(transformed, columns=names, index=df.index)
 
-    remaining = df.drop(columns=target_columns)
     existing = [column for column in poly_df.columns if column not in df.columns]
     poly_df = poly_df[existing]
     return pd.concat([df, poly_df], axis=1)
