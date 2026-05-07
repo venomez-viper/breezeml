@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "breezeml"
 version = "0.2.9"
 authors = [
-  { name="Akash Anipakalu Giridhar", email="akash@example.com" }
+  { name="Akash Anipakalu Giridhar", email="akashagakash@gmail.com" }
 ]
 description = "BreezeML — Production-grade machine learning with zero boilerplate, built on scikit-learn."
 readme = "README.md"
