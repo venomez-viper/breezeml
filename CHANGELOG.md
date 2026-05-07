@@ -1,106 +1,121 @@
-# 📜 Changelog
+# Changelog
 
 All notable changes to BreezeML are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.2.9] — 2026-05-07
+## [0.3.0] - 2026-05-07
 
 ### Added
-- **Semantic Text Embeddings**: Added `breezeml.text` to natively convert raw text columns into dense semantic vectors via `sentence-transformers`.
-- **Explainability**: Added `breezeml.explain` to instantly generate SHAP feature importance plots.
-- **Native Plotting**: Added `breezeml.plot` for generating `matplotlib` confusion matrices and ROC curves in one line.
-- **MkDocs Site**: Prepared an ultra-premium `mkdocs-material` documentation website.
-- **Manual Task Override**: `fit()` and `auto()` now accept a `task` parameter (`"classification"`, `"regression"`, or `"auto"`) to manually override automatic task detection.
+- **Dedicated `regressors` module**: Added 10 regression wrappers with benchmarking, detailed evaluation, and tuning helpers.
+- **Cross-validation support**: Added `cv=` support across classifier and regressor training helpers, including mean/std metrics in reports.
+- **Feature engineering toolkit**: Added `breezeml.features` with `select()`, `importance()`, `pca()`, and `polynomial()`.
+- **Optional boosting integrations**: Added lazy XGBoost and LightGBM support for both classification and regression workflows.
+- **Expanded plotting**: Added comparison charts, learning curves, and feature importance plots to `breezeml.plot`.
+- **More datasets**: Added `datasets.california_housing()`, `datasets.penguins()`, and `datasets.from_url()`.
+- **Test coverage**: Added tests for regressors, feature engineering, and optional boosting integrations.
+
+### Changed
+- **Version bump**: Updated package metadata and public API version to `0.3.0`.
+- **README expansion**: Updated the README to document regressors, cross-validation, feature engineering, optional boosting, and new datasets.
+
+### Fixed
+- **Parallel fallback**: Added serial fallback paths when process-based parallel execution is blocked in constrained environments.
+- **Classifier leaderboard parity**: Included the missing Multinomial Naive Bayes model in classifier leaderboard coverage.
+
+## [0.2.9] - 2026-05-07
+
+### Added
+- **Semantic Text Embeddings**: Added `breezeml.text` to convert raw text columns into dense semantic vectors via `sentence-transformers`.
+- **Explainability**: Added `breezeml.explain` to generate SHAP feature importance plots.
+- **Native Plotting**: Added `breezeml.plot` for Matplotlib confusion matrices and ROC curves in one line.
+- **MkDocs Site**: Prepared a `mkdocs-material` documentation site.
+- **Manual Task Override**: `fit()` and `auto()` now accept `task="classification"`, `task="regression"`, or `task="auto"`.
 - **Ruff Linting**: Integrated `ruff` into the CI pipeline.
 - **Extended Test Matrix**: GitHub Actions CI now runs against Python 3.9 through 3.13.
 
 ### Changed
-- **Deduplicated Preprocessing**: Centralized identical imputation and encoding logic into `breezeml/_preprocessing.py` to follow DRY principles.
+- **Deduplicated Preprocessing**: Centralized shared imputation and encoding logic into `breezeml/_preprocessing.py`.
 - **Removed Unused Imports**: Cleaned up legacy imports across the codebase.
 
 ### Fixed
-- **Multinomial Naïve Bayes**: Gracefully accepts data with negative features by internally shifting to `MinMaxScaler` instead of crashing on the default `StandardScaler`.
+- **Multinomial Naive Bayes**: Shifted to `MinMaxScaler` when non-negative inputs are required.
 
-## [0.2.7] — 2026-05-07
+## [0.2.7] - 2026-05-07
 
 ### Added
-- **Test Suite**: Added `tests/` directory with a proper `pytest` suite for input validation, core functions, and classifiers.
-- **Input Validation**: Added `_validation.py` to check for valid pandas DataFrames and target columns across the public API, replacing cryptic errors with clear ones.
+- **Test Suite**: Added `tests/` with `pytest` coverage for input validation, core functions, and classifiers.
+- **Input Validation**: Added `_validation.py` to validate dataframes and target columns across the public API.
 
 ### Changed
-- **CI Modernization**: Updated GitHub Actions to run `pytest` with `dev` dependencies instead of running silent python scripts.
-- **License**: Replaced empty stub with the full MIT License text.
+- **CI Modernization**: Updated GitHub Actions to run `pytest` with `dev` dependencies.
+- **License**: Replaced the stub with the full MIT License text.
 
 ### Fixed
-- **`from_csv` Data Leak**: Refactored `from_csv` to properly use the 80/20 test split (via `auto()`) instead of reporting metrics evaluated on the training data.
+- **`from_csv` Data Leak**: Refactored `from_csv` to use the 80/20 evaluation path via `auto()`.
 
-## [0.2.6] — 2026-05-06
+## [0.2.6] - 2026-05-06
 
 ### Added
-- **Cascade Classification**: Chain multiple BreezeML models into a hierarchical cascade.
-- **External Test Sets**: Pass `X_test` / `y_test` to any classifier to evaluate on your own held-out split.
-- **Macro F1**: Every report dict now includes `macro_f1` alongside weighted F1.
-- Aliases `logistic_regression()` and `naive_bayes()`.
+- **Cascade Classification**: Added support for hierarchical multi-level classification pipelines.
+- **External Test Sets**: All classifiers accept `X_test` / `y_test`.
+- **Macro F1**: Every classifier report now includes `macro_f1`.
+- Added aliases `logistic_regression()` and `naive_bayes()`.
 
-## [0.2.5] — 2026-05-06
-
-### Fixed
-- **Linear SVM Class Imbalance**: Added `class_weight='balanced'` globally to all underlying `LinearSVC` initializations (`linear_svm`, `compare`, `detailed_report`). This forces the scikit-learn optimization engine to penalize misclassifications on tiny, sparse target classes effectively, skyrocketing F1-score performance out-of-the-box for highly skewed NLP classification datasets.
-
-## [0.2.4] — 2026-04-22
+## [0.2.5] - 2026-05-06
 
 ### Fixed
-- **Pipeline Save Bug**: Hot-patched `breezeml.save()` to dynamically check if the model object genuinely has a `.save()` method (like `EasyModel` does). If you pass it a raw strictly scikit-learn `Pipeline` (such as the return from classifiers module functions), it automatically falls back natively to `joblib.dump()`, preventing fatal `AttributeError` tracebacks.
+- **Linear SVM Class Imbalance**: Added `class_weight="balanced"` to `LinearSVC` configurations used throughout the classifier stack.
 
-## [0.2.3] — 2026-04-22
+## [0.2.4] - 2026-04-22
+
+### Fixed
+- **Pipeline Save Bug**: `breezeml.save()` now falls back to `joblib.dump()` for raw sklearn pipelines.
+
+## [0.2.3] - 2026-04-22
 
 ### Added
-- **Sparse Matrix Support**: The `classifiers` module (`linear_svm`, `compare`, `detailed_report`) now directly accepts `X` and `y` keyword parameters (`classifiers.func(X=X, y=y)`) to natively process `scipy.sparse` matrices, bypassing dense Pandas conversion bottlenecks.
+- **Sparse Matrix Support**: `linear_svm`, `compare`, and `detailed_report` accept direct `X=` / `y=` sparse inputs.
 
 ### Fixed
-- **Linear SVM Primal Formulation**: Hand-patched all `LinearSVC` references with `dual=False`. This overrides the default scikit-learn Dual Formulation math trap when datasets have highly-dimensional sparse text vectors (n_samples > n_features), solving 20+ minute memory deadlocks and reducing training time to < 2 seconds.
+- **Linear SVM Primal Formulation**: Set `dual=False` to avoid slow dual-form behavior on suitable sparse workloads.
 
-## [0.2.1] — 2026-04-22
+## [0.2.1] - 2026-04-22
 
 ### Changed
-- **Massive Performance Boost for `classifiers.compare`**: We now utilize `joblib.Parallel(n_jobs=-1)` to train and evaluate all 12 baseline classification models concurrently across all available CPU cores. This effectively turns O(N) waiting time into O(1), drastically speeding up the model leaderboards on larger datasets.
+- **Parallelized Classifier Benchmarks**: `classifiers.compare()` uses `joblib.Parallel(n_jobs=-1)` for faster leaderboards.
 
-## [0.2.0] — 2025-10-21
+## [0.2.0] - 2025-10-21
 
 ### Added
-- **5 new classifiers**: `knn`, `gradient_boosting`, `adaboost`, `extra_trees`, `mlp` (Multi-Layer Perceptron Neural Network) — bringing the total to 12.
-- **`classifiers.compare(df, target)`** — benchmarks all 12 classifiers on a dataset and returns a ranked leaderboard sorted by accuracy and F1 score.
-- **`classifiers.detailed_report(df, target)`** — returns confusion matrix, per-class precision, recall, F1, ROC-AUC, and a full sklearn classification report string.
-- **`classifiers.quick_tune(df, target, algo)`** — automated hyperparameter search via `RandomizedSearchCV` with curated parameter grids for 9 supported algorithms.
-- Comprehensive test script `examples/test_v020_features.py` covering all new functionality.
+- **5 new classifiers**: `knn`, `gradient_boosting`, `adaboost`, `extra_trees`, and `mlp`.
+- **`classifiers.compare(df, target)`**: Benchmarks all built-in classifiers and ranks them by accuracy and F1.
+- **`classifiers.detailed_report(df, target)`**: Returns confusion matrix, per-class precision/recall/F1, ROC-AUC, and a full sklearn classification report.
+- **`classifiers.quick_tune(df, target, algo)`**: Runs `RandomizedSearchCV` with curated parameter grids.
+- Added broader example coverage in `examples/test_v020_features.py`.
 
 ### Changed
-- All metrics are now rounded to 4 decimal places for consistent, readable output.
-- README fully rewritten: classifier table, `compare` example, `detailed_report` example, `quick_tune` example, and architecture diagram.
+- Rounded metrics to 4 decimal places for consistency.
+- Rewrote the README with classifier tables, examples, and architecture notes.
 
----
-
-## [0.1.2] — 2025-10-16
+## [0.1.2] - 2025-10-16
 
 ### Added
-- Interactive Colab Quickstart notebook (`examples/breezeml_quickstart.ipynb`) + README Colab badge.
+- Interactive Colab quickstart notebook and README badge.
 - Beginner-friendly README with CSV guide, feature table, and troubleshooting section.
-- **`classifiers` module**: Logistic Regression, SVM (RBF), Linear SVM, Gaussian Naïve Bayes, Multinomial Naïve Bayes, Decision Tree, Random Forest.
-- **`clustering` module**: K-Means, Agglomerative Hierarchical, DBSCAN — all returning labels and silhouette score.
+- **`classifiers` module**: Logistic Regression, SVM (RBF), Linear SVM, Gaussian Naive Bayes, Multinomial Naive Bayes, Decision Tree, Random Forest.
+- **`clustering` module**: K-Means, Agglomerative Hierarchical, and DBSCAN.
 
 ### Fixed
-- RMSE now computed as `sqrt(mean_squared_error(...))` for compatibility with scikit-learn < 0.24 (which did not expose the `squared` parameter).
+- RMSE now uses `sqrt(mean_squared_error(...))` for older scikit-learn compatibility.
 
----
-
-## [0.1.1] — 2025-10-03
+## [0.1.1] - 2025-10-03
 
 ### Added
 - Initial PyPI release.
 - Core API: `fit`, `predict`, `auto`, `from_csv`, `report`, `save`, `load`.
-- `datasets` class: `iris`, `wine`, `breast_cancer`, `diabetes`.
+- `datasets`: `iris`, `wine`, `breast_cancer`, and `diabetes`.
 - `creator()` easter egg function.
 - `EasyModel` wrapper class encapsulating pipeline, task type, and target column.
-- Example scripts: `test_classification.py`, `test_regression.py`, `test_save_load.py`.
+- Example scripts: `test_classification.py`, `test_regression.py`, and `test_save_load.py`.

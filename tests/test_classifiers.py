@@ -26,3 +26,11 @@ def test_quick_tune():
     model, params, report = classifiers.quick_tune(df, "species", algo="decision_tree", n_iter=2, cv=2)
     assert isinstance(params, dict)
     assert "accuracy" in report
+
+def test_classifier_cv_report():
+    df = datasets.iris()
+    model, report = classifiers.logistic(df, "species", cv=3)
+    assert hasattr(model, "predict")
+    assert "accuracy_std" in report
+    assert "f1_std" in report
+    assert "macro_f1_std" in report

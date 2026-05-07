@@ -34,3 +34,12 @@ def test_regressor_quick_tune():
     assert hasattr(model, "predict")
     assert isinstance(params, dict)
     assert "r2" in report
+
+
+def test_regressor_cv_report():
+    df = datasets.diabetes()
+    model, report = regressors.ridge(df, "target", cv=3)
+    assert hasattr(model, "predict")
+    assert "r2_std" in report
+    assert "mae_std" in report
+    assert "rmse_std" in report

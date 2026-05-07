@@ -52,9 +52,12 @@ That is the core idea: fewer moving parts, fewer repetitive preprocessing steps,
 | **10 regressors** *(v0.3.0)* | From Linear Regression to Gradient Boosting and MLP, available in one function call |
 | **Classifier leaderboard** | `classifiers.compare()` ranks all built-in classifiers by accuracy and F1 |
 | **Regressor leaderboard** *(v0.3.0)* | `regressors.compare()` ranks all built-in regressors by R2, MAE, and RMSE |
+| **Cross-validation support** *(v0.3.0)* | Most classifier and regressor training helpers now accept `cv=` and return mean/std metrics |
+| **Feature engineering toolkit** *(v0.3.0)* | `breezeml.features` adds selection, importance, PCA, and polynomial expansion helpers |
+| **Optional boosting backends** *(v0.3.0)* | XGBoost and LightGBM plug into the compare and tuning flows when installed |
 | **Hyperparameter tuning** | `quick_tune()` wrappers run `RandomizedSearchCV` with curated parameter grids |
 | **Detailed reports** | Classification and regression helpers expose richer diagnostics in one call |
-| **Built-in datasets** | Iris, Wine, Breast Cancer, and Diabetes are available immediately |
+| **Built-in datasets** | Iris, Wine, Breast Cancer, Diabetes, California Housing, and Penguins are available immediately |
 | **Model persistence** | `save()` / `load()` use `joblib` under the hood |
 | **Text embeddings** *(v0.2.9)* | `breezeml.text.embed()` converts raw text columns to dense semantic vectors |
 | **Explainability** *(v0.2.9)* | `breezeml.explain` gives SHAP-based feature importance plots |
@@ -71,6 +74,7 @@ breezeml/
 |-- classifiers.py     # 12 classifiers + compare, detailed_report, quick_tune
 |-- regressors.py      # 10 regressors + compare, detailed_report, quick_tune
 |-- clustering.py      # kmeans, agglomerative, dbscan
+|-- features.py        # feature selection, importances, PCA, polynomial expansion
 |-- text.py            # semantic text embeddings
 |-- explain.py         # SHAP explainability
 |-- plot.py            # plotting helpers
@@ -120,6 +124,8 @@ Optional extras:
 pip install "breezeml[nlp]"
 pip install "breezeml[explain]"
 pip install "breezeml[plot]"
+pip install "breezeml[boost]"
+pip install "breezeml[datasets]"
 pip install "breezeml[all]"
 ```
 
@@ -154,6 +160,16 @@ from breezeml import datasets, regressors
 
 df = datasets.diabetes()
 model, report = regressors.gradient_boosting(df, "target")
+print(report)
+```
+
+### Cross-validation in one line *(new in v0.3.0)*
+
+```python
+from breezeml import classifiers, datasets
+
+df = datasets.iris()
+model, report = classifiers.logistic(df, "species", cv=5)
 print(report)
 ```
 
@@ -280,7 +296,7 @@ print(params)
 print(report)
 ```
 
-Supported algorithms: `logistic`, `svm`, `knn`, `decision_tree`, `random_forest`, `gradient_boosting`, `adaboost`, `extra_trees`, `mlp`
+Supported algorithms: `logistic`, `svm`, `knn`, `decision_tree`, `random_forest`, `gradient_boosting`, `adaboost`, `extra_trees`, `mlp`, plus optional `xgboost` and `lightgbm`
 
 Aliases:
 
@@ -364,7 +380,43 @@ print(params)
 print(report)
 ```
 
-Supported algorithms: `linear`, `ridge`, `lasso`, `elastic_net`, `svr`, `decision_tree`, `random_forest`, `gradient_boosting`, `knn`, `mlp`
+Supported algorithms: `linear`, `ridge`, `lasso`, `elastic_net`, `svr`, `decision_tree`, `random_forest`, `gradient_boosting`, `knn`, `mlp`, plus optional `xgboost` and `lightgbm`
+
+---
+
+### `features` Module *(new in v0.3.0)*
+
+Use `breezeml.features` to reduce noisy feature spaces, inspect model importances, and engineer stronger tabular inputs.
+
+#### `features.select(df, target, method="mutual_info", k=10)`
+
+```python
+from breezeml import datasets, features
+
+df = datasets.iris()
+selected = features.select(df, "species", method="mutual_info", k=3)
+print(selected.head())
+```
+
+#### `features.importance(model, df, target=None)`
+
+```python
+from breezeml import datasets, features, regressors
+
+df = datasets.diabetes()
+model, _ = regressors.random_forest(df, "target")
+print(features.importance(model, df, target="target"))
+```
+
+#### `features.pca(df, n_components=0.95)` and `features.polynomial(df, degree=2, columns=None)`
+
+```python
+from breezeml import datasets, features
+
+df = datasets.iris().drop(columns=["species"])
+pca_df = features.pca(df, n_components=2)
+poly_df = features.polynomial(df, degree=2, columns=df.columns[:2].tolist())
+```
 
 ---
 
@@ -421,6 +473,16 @@ confusion_matrix(model, X_test, y_test, cmap="Blues")
 roc_curve(model, X_test, y_test)
 ```
 
+#### `plot.compare_chart`, `plot.learning_curve`, and `plot.feature_importance` *(v0.3.0)*
+
+```python
+from breezeml import datasets, classifiers, plot
+
+df = datasets.iris()
+results = classifiers.compare(df, "species", show=False)
+plot.compare_chart(results, metric="accuracy")
+```
+
 ---
 
 ### `clustering` Module
@@ -450,6 +512,9 @@ print(res["labels"][:10])
 | `datasets.wine()` | sklearn | `class` | Classification |
 | `datasets.breast_cancer()` | sklearn | `label` | Classification |
 | `datasets.diabetes()` | sklearn | `target` | Regression |
+| `datasets.california_housing()` | sklearn | `MedHouseVal` | Regression |
+| `datasets.penguins()` | seaborn | `species` | Classification |
+| `datasets.from_url(url)` | CSV URL | user-defined | Mixed |
 
 ---
 
@@ -465,6 +530,8 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 | `test_classification.py` | Basic classification smoke test |
 | `test_classifiers.py` | All 12 classifiers end-to-end |
 | `test_clustering.py` | Clustering algorithms |
+| `test_boost.py` | Optional XGBoost and LightGBM coverage |
+| `test_features.py` | Feature engineering helpers |
 | `test_regression.py` | Core regression pipeline |
 | `test_regressors.py` | Regressor leaderboard, detailed report, and tuning coverage |
 | `test_save_load.py` | Model persistence |
@@ -490,10 +557,13 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] 10 regressors with leaderboard, detailed reports, and tuning *(v0.3.0)*
 - [x] Classifier leaderboard (`compare`)
 - [x] Regressor leaderboard (`regressors.compare`) *(v0.3.0)*
+- [x] Cross-validation support across classifiers and regressors *(v0.3.0)*
 - [x] Hyperparameter auto-tuning (`quick_tune`)
 - [x] Regression hyperparameter tuning (`regressors.quick_tune`) *(v0.3.0)*
 - [x] Detailed evaluation reports (confusion matrix, ROC-AUC)
 - [x] Detailed regression reports (`adjusted_r2`, `mape`, residuals) *(v0.3.0)*
+- [x] Feature engineering helpers (`select`, `importance`, `pca`, `polynomial`) *(v0.3.0)*
+- [x] Optional XGBoost and LightGBM integration *(v0.3.0)*
 - [x] Clustering (K-Means, DBSCAN, Agglomerative)
 - [x] Cascade classification - hierarchical multi-level pipelines *(v0.2.6)*
 - [x] External test set support (`X_test` / `y_test`) on all classifiers *(v0.2.6)*

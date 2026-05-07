@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "breezeml"
-version = "0.2.9"
+version = "0.3.0"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akashagakash@gmail.com" }
 ]
@@ -41,7 +41,9 @@ dev = ["pytest>=7.0", "pytest-cov", "ruff", "mkdocs-material", "mkdocstrings[pyt
 nlp = ["sentence-transformers"]
 explain = ["shap", "matplotlib"]
 plot = ["matplotlib"]
-all = ["sentence-transformers", "shap", "matplotlib"]
+boost = ["xgboost", "lightgbm"]
+datasets = ["seaborn"]
+all = ["sentence-transformers", "shap", "matplotlib", "xgboost", "lightgbm", "seaborn"]
 
 [project.urls]
 Homepage = "https://github.com/venomez-viper/breezeml"

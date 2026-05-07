@@ -172,3 +172,21 @@ class datasets:
         data = skdatasets.load_diabetes(as_frame=True)
         df = data.frame.copy()
         return df
+
+    @staticmethod
+    def california_housing():
+        data = skdatasets.fetch_california_housing(as_frame=True)
+        return data.frame.copy()
+
+    @staticmethod
+    def penguins():
+        try:
+            import seaborn as sns
+        except ImportError as exc:
+            raise ImportError("Install seaborn to use datasets.penguins(): pip install seaborn") from exc
+        df = sns.load_dataset("penguins").dropna().reset_index(drop=True)
+        return df
+
+    @staticmethod
+    def from_url(url):
+        return pd.read_csv(url)

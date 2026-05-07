@@ -1,9 +1,9 @@
-# BreezeML v0.3.0 Release Notes (The "Regression Parity" Update)
+# BreezeML v0.3.0 Release Notes (The "Major Expansion" Update)
 
 ## Key Improvements & Features
 
-### Full `regressors` Module
-Added a dedicated `breezeml.regressors` module to bring regression up to feature parity with the classification stack. BreezeML now includes 10 one-line regressors:
+### Full Regression Stack
+Added a dedicated `breezeml.regressors` module with 10 one-line regressors:
 
 - `linear`
 - `ridge`
@@ -16,29 +16,52 @@ Added a dedicated `breezeml.regressors` module to bring regression up to feature
 - `knn`
 - `mlp`
 
-### Regression Leaderboards
-Added `regressors.compare(df, target)` to benchmark all built-in regressors in one call and rank them by R2, MAE, and RMSE.
+Each regressor now supports:
 
-### Detailed Regression Reports
-Added `regressors.detailed_report(df, target)` with:
+- one-line training
+- leaderboard benchmarking via `regressors.compare()`
+- detailed diagnostics via `regressors.detailed_report()`
+- hyperparameter search via `regressors.quick_tune()`
 
-- `r2`
-- `adjusted_r2`
-- `mae`
-- `rmse`
-- `mape`
-- `explained_variance`
-- residual arrays
-- prediction-vs-actual pairs for plotting
+### Cross-Validation Across the Training Stack
+Classifier and regressor training helpers now accept `cv=` and can return mean/std metrics directly in their report dictionaries. This makes BreezeML much more useful for proper model selection instead of single-split prototyping only.
 
-### Regression Hyperparameter Tuning
-Added `regressors.quick_tune(df, target, algo)` powered by `RandomizedSearchCV` for one-line model search across the new regression algorithms.
+### New Feature Engineering Module
+Added `breezeml.features` with:
 
-### Core API Regression Upgrade
-The core `regress()`, `auto()`, and `report()` paths now use the new regression metrics, so BreezeML's top-level API reports richer regression evaluation out of the box.
+- `select()` for top-k feature selection
+- `importance()` for model-based or permutation importance
+- `pca()` for dimensionality reduction
+- `polynomial()` for interaction and polynomial feature expansion
 
-### Better Resilience in Constrained Environments
-Added a safe serial fallback when process-based parallel execution is blocked by the local environment, so leaderboards and tuning still work in restricted Windows setups.
+### Optional XGBoost and LightGBM Integration
+BreezeML can now plug into modern gradient boosting libraries when installed:
+
+- `classifiers.xgboost()`
+- `classifiers.lightgbm()`
+- `regressors.xgboost()`
+- `regressors.lightgbm()`
+
+These models also flow into the compare and tuning systems automatically when the packages are available.
+
+### Expanded Plotting Helpers
+Added:
+
+- `plot.compare_chart()`
+- `plot.learning_curve()`
+- `plot.feature_importance()`
+
+These sit alongside the existing confusion matrix and ROC curve helpers.
+
+### More Built-In Datasets
+Added:
+
+- `datasets.california_housing()`
+- `datasets.penguins()`
+- `datasets.from_url()`
+
+### Better Behavior in Restricted Environments
+Added serial fallback paths when process-based parallel execution is blocked, so compare/tuning helpers continue to work in constrained Windows environments.
 
 ---
 *Created by Akash Anipakalu Giridhar*

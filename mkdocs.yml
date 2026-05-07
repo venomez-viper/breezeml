@@ -7,14 +7,13 @@ repo_name: venomez-viper/breezeml
 theme:
   name: material
   palette:
-    # Palette toggle for dark mode
     - scheme: default
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: deep purple
-      accent: deep purple
+      primary: teal
+      accent: lime
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -38,12 +37,14 @@ plugins:
 
 nav:
   - Home: index.md
-  - Tutorials & Examples: examples.md
+  - Examples: examples.md
   - API Reference:
       - Core: api/core.md
       - Classifiers: api/classifiers.md
+      - Regressors: api/regressors.md
+      - Features: api/features.md
       - Clustering: api/clustering.md
-      - NLP Embeddings: api/text.md
+      - Text Embeddings: api/text.md
       - Explainability: api/explain.md
       - Plotting: api/plot.md
 
