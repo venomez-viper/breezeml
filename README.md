@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/venomez-viper/breezeml/main/docs/assets/banner.png" alt="BreezeML Banner" width="800"/>
+<img src="https://raw.githubusercontent.com/venomez-viper/breezeml/main/assets/breezeml_banner_1778130992461.png" alt="BreezeML Banner" width="800"/>
 
 # BreezeML
 
@@ -62,6 +62,9 @@ That's it. No manual train/test splits. No encoder boilerplate. No metric aggreg
 | **Macro F1 in all reports** *(v0.2.6)* | Every report dict now includes `macro_f1` alongside weighted F1 |
 | **Manual task override** *(v0.2.8)* | Override automatic task detection by passing `task="classification"` or `task="regression"` |
 | **Strict input validation** *(v0.2.8)* | All API functions safely validate inputs to prevent cryptic tracebacks |
+| **Native semantic text embeddings** *(v0.2.9)* | Automatically convert text columns into dense semantic vectors using `sentence-transformers` |
+| **SHAP explainability** *(v0.2.9)* | Instant feature importance plots to crack open the black box via `breezeml.explain` |
+| **Native plotting helpers** *(v0.2.9)* | One-line code for beautiful Matplotlib confusion matrices and ROC curves |
 
 ---
 
@@ -308,6 +311,47 @@ joblib.dump({"sector": m1, "group": m2, "code": m3}, "cascade_model.joblib")
 
 ---
 
+### NLP & Semantic Embeddings *(new in v0.2.9)*
+
+Convert raw text strings (like reviews or comments) into dense 384-dimensional semantic vectors using `sentence-transformers`. This allows models like SVMs and Random Forests to understand the *meaning* of text, massively outperforming standard TF-IDF.
+
+```python
+from breezeml.text import embed
+
+# Replaces the 'review' column with dense float embeddings
+df_dense = embed(df, text_columns=["review"])
+
+# Now you can directly train a model on the semantic meaning of the text!
+model = fit(df_dense, target="sentiment")
+```
+
+---
+
+### Explainability & Plotting *(new in v0.2.9)*
+
+Machine learning shouldn't be a black box.
+
+#### `explain.explain(model, df)`
+Calculates SHAP values and plots feature importance, showing exactly what drives your model's predictions.
+
+```python
+from breezeml.explain import explain
+
+explain(model, X_test)
+```
+
+#### `plot.confusion_matrix` & `plot.roc_curve`
+Instant Matplotlib visualizations without the boilerplate.
+
+```python
+from breezeml.plot import confusion_matrix, roc_curve
+
+confusion_matrix(model, X_test, y_test, cmap="Blues")
+roc_curve(model, X_test, y_test)
+```
+
+---
+
 ### `clustering` Module
 
 ```python
@@ -379,8 +423,9 @@ All examples are in [`/examples`](examples/). Run them directly or open the Cola
 - [x] Cascade classification — hierarchical multi-level pipelines *(v0.2.6)*
 - [x] External test set support (`X_test` / `y_test`) on all classifiers *(v0.2.6)*
 - [x] Macro F1 in all report dicts *(v0.2.6)*
-- [ ] `explain()` — SHAP-based feature importance
-- [ ] Native plotting (`plot_confusion_matrix`, `plot_roc`)
+- [x] Native Semantic Text Embeddings (`breezeml.text`) *(v0.2.9)*
+- [x] `explain()` — SHAP-based feature importance *(v0.2.9)*
+- [x] Native plotting (`plot_confusion_matrix`, `plot_roc`) *(v0.2.9)*
 - [ ] Additional datasets (Titanic, MNIST subset)
 - [ ] `Pipeline.export()` — export trained pipeline as Python script
 - [ ] `BreezeAutoML` — full AutoML via Optuna integration
