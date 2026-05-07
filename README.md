@@ -60,6 +60,8 @@ That's it. No manual train/test splits. No encoder boilerplate. No metric aggreg
 | **Cascade classification** *(v0.2.6)* | Chain multiple BreezeML models into a hierarchical cascade for fine-grained multi-level classification |
 | **External test sets** *(v0.2.6)* | Pass `X_test` / `y_test` to any classifier to evaluate on your own held-out split |
 | **Macro F1 in all reports** *(v0.2.6)* | Every report dict now includes `macro_f1` alongside weighted F1 |
+| **Manual task override** *(v0.2.8)* | Override automatic task detection by passing `task="classification"` or `task="regression"` |
+| **Strict input validation** *(v0.2.8)* | All API functions safely validate inputs to prevent cryptic tracebacks |
 
 ---
 
@@ -149,11 +151,11 @@ print(report)
 
 ### Core Functions
 
-#### `fit(df, target)` → `EasyModel`
-Train a model. Task (classification vs regression) is inferred automatically from the target column.
+#### `fit(df, target, task="auto")` → `EasyModel`
+Train a model. Task (classification vs regression) is inferred automatically from the target column, or can be forced via `task`.
 
 ```python
-model = fit(df, "target_column")
+model = fit(df, "target_column", task="classification")
 ```
 
 #### `predict(model, X)` → `np.ndarray`
@@ -163,11 +165,11 @@ Run inference on new data.
 predictions = predict(model, new_df)
 ```
 
-#### `auto(df, target)` → `(EasyModel, dict)`
+#### `auto(df, target, task="auto")` → `(EasyModel, dict)`
 Same as `fit`, but also returns an evaluation report.
 
 ```python
-model, report = auto(df, "target_column")
+model, report = auto(df, "target_column", task="regression")
 ```
 
 #### `from_csv(path, target)` → `(EasyModel, dict)`
@@ -393,7 +395,8 @@ Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 git clone https://github.com/venomez-viper/breezeml.git
 cd breezeml
 pip install -e ".[dev]"
-pytest examples/
+pytest tests/ -v
+ruff check .
 ```
 
 All PRs must:

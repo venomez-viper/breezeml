@@ -1,7 +1,4 @@
-import pytest
-import pandas as pd
-from breezeml import datasets, fit, predict, auto, report, classify, regress
-from sklearn.pipeline import Pipeline
+from breezeml import datasets, fit, predict, auto, report
 
 def test_classify_and_predict():
     df = datasets.iris()

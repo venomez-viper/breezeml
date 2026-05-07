@@ -29,9 +29,7 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from ._validation import check_df_target
 from ._preprocessing import _detect_types, _build_preprocessor
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
-from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC, LinearSVC
