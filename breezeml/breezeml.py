@@ -1,24 +1,21 @@
 """
 BreezeML: Beginner-friendly wrapper around scikit-learn
 
-Created by Akash Anipakalu Giridhar 🔥✨
-v0.2.9
+Created by Akash Anipakalu Giridhar
+v0.3.0
 """
 import pandas as pd
-import numpy as np
 import joblib
 
 from ._validation import check_df_target
 from ._preprocessing import _detect_types, _build_preprocessor
+from . import regressors
 
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.metrics import (
-    accuracy_score, f1_score,
-    r2_score, mean_absolute_error, mean_squared_error
-)
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn import datasets as skdatasets
 
 __all__ = [
@@ -42,9 +39,6 @@ class EasyModel:
     @staticmethod
     def load(path):
         return joblib.load(path)
-
-
-
 
 
 def classify(df, target, algo="forest", return_report=True):
@@ -74,31 +68,22 @@ def classify(df, target, algo="forest", return_report=True):
 
 
 def regress(df, target, algo="forest", return_report=True):
-    check_df_target(df, target)
-    X = df.drop(columns=[target])
-    y = df[target]
-    numeric, categorical = _detect_types(df, target)
-    pre = _build_preprocessor(numeric, categorical)
+    algo_map = {
+        "forest": "random_forest",
+        "random_forest": "random_forest",
+        "linear": "linear",
+    }
+    algo_name = algo_map.get(algo, algo)
+    train_fn = getattr(regressors, algo_name, None)
+    if train_fn is None:
+        raise ValueError(f"Unknown regression algorithm '{algo}'.")
 
-    model = RandomForestRegressor(random_state=42) if algo == "forest" else LinearRegression()
-    pipe = Pipeline([("pre", pre), ("model", model)])
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    pipe.fit(X_train, y_train)
-
+    pipe, reg_report = train_fn(df, target)
     em = EasyModel(pipe, target, "regression")
 
     if not return_report:
         return em
-    preds = pipe.predict(X_test)
-    mse = mean_squared_error(y_test, preds)  # support for older sklearn
-    rmse = float(np.sqrt(mse))
-    report = {
-        "r2": float(r2_score(y_test, preds)),
-        "mae": float(mean_absolute_error(y_test, preds)),
-        "rmse": rmse
-    }
-    return em, report
+    return em, reg_report
 
 
 def fit(df, target, task="auto"):
@@ -118,27 +103,21 @@ def from_csv(path, target):
 def report(model, df):
     check_df_target(df, model.target)
     y = df[model.target]
-    preds = model.predict(df.drop(columns=[model.target]))
+    X = df.drop(columns=[model.target])
+    preds = model.predict(X)
     if model.task == "classification":
         return {
             "accuracy": float(accuracy_score(y, preds)),
             "f1": float(f1_score(y, preds, average="weighted"))
         }
     else:
-        mse = mean_squared_error(y, preds)
-        rmse = float(np.sqrt(mse))
-        return {
-            "r2": float(r2_score(y, preds)),
-            "mae": float(mean_absolute_error(y, preds)),
-            "rmse": rmse
-        }
+        return regressors._regression_report(y, preds, X.shape[1])
 
 
 def save(model, path):
     if hasattr(model, "save"):
         model.save(path)
     else:
-        import joblib
         joblib.dump(model, path)
 
 
@@ -150,12 +129,12 @@ def auto(df, target, task="auto"):
     """Automatically pick classification or regression based on target."""
     check_df_target(df, target)
     y = df[target]
-    
+
     if task == "classification":
         return classify(df, target)
     elif task == "regression":
         return regress(df, target)
-        
+
     if y.dtype == "object" or y.nunique() < 20:
         return classify(df, target)
     else:
@@ -163,7 +142,7 @@ def auto(df, target, task="auto"):
 
 
 def creator():
-    return "Created by Akash Anipakalu Giridhar 🔥✨"
+    return "Created by Akash Anipakalu Giridhar"
 
 
 class datasets:
