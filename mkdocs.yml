@@ -1,0 +1,58 @@
+site_name: BreezeML
+site_description: Machine learning without the boilerplate.
+site_url: https://venomez-viper.github.io/breezeml/
+repo_url: https://github.com/venomez-viper/breezeml
+repo_name: venomez-viper/breezeml
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for dark mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: true
+            show_root_heading: true
+
+nav:
+  - Home: index.md
+  - Tutorials & Examples: examples.md
+  - API Reference:
+      - Core: api/core.md
+      - Classifiers: api/classifiers.md
+      - Clustering: api/clustering.md
+      - NLP Embeddings: api/text.md
+      - Explainability: api/explain.md
+      - Plotting: api/plot.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

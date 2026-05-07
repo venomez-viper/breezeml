@@ -1,5 +1,5 @@
 """
-BreezeML Classifiers (v0.2.8)
+BreezeML Classifiers (v0.2.9)
 Easy wrappers for popular classification algorithms with sensible preprocessing.
 
 New in v0.2.6:

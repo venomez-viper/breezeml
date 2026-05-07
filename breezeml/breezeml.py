@@ -2,7 +2,7 @@
 BreezeML: Beginner-friendly wrapper around scikit-learn
 
 Created by Akash Anipakalu Giridhar 🔥✨
-v0.2.8
+v0.2.9
 """
 import pandas as pd
 import numpy as np

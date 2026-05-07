@@ -5,7 +5,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
-## [0.2.8] — Unreleased
+## [0.2.9] — Unreleased
 
 ### Added
 - **Manual Task Override**: `fit()` and `auto()` now accept a `task` parameter (`"classification"`, `"regression"`, or `"auto"`) to manually override automatic task detection.
@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ### Changed
 - **Deduplicated Preprocessing**: Centralized identical imputation and encoding logic into `breezeml/_preprocessing.py` to follow DRY principles.
+- **Removed Unused Imports**: Cleaned up legacy imports across the codebase.
 
 ### Fixed
 - **Multinomial Naïve Bayes**: Gracefully accepts data with negative features by internally shifting to `MinMaxScaler` instead of crashing on the default `StandardScaler`.

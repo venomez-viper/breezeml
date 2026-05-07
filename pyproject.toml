@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "breezeml"
-version = "0.2.8"
+version = "0.2.9"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akash@example.com" }
 ]
@@ -37,10 +37,17 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-cov", "ruff"]
+dev = ["pytest>=7.0", "pytest-cov", "ruff", "mkdocs-material", "mkdocstrings[python]"]
+nlp = ["sentence-transformers"]
+explain = ["shap", "matplotlib"]
+plot = ["matplotlib"]
+all = ["sentence-transformers", "shap", "matplotlib"]
 
 [project.urls]
 Homepage = "https://github.com/venomez-viper/breezeml"
 Repository = "https://github.com/venomez-viper/breezeml"
 Issues = "https://github.com/venomez-viper/breezeml/issues"
 Documentation = "https://pypi.org/project/breezeml/"
+
+[tool.setuptools.packages.find]
+include = ["breezeml*"]
