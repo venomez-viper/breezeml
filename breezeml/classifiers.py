@@ -1,5 +1,5 @@
 """
-BreezeML Classifiers (v0.2.6)
+BreezeML Classifiers (v0.2.7)
 Easy wrappers for popular classification algorithms with sensible preprocessing.
 
 New in v0.2.6:
@@ -27,6 +27,7 @@ from sklearn.metrics import (
     confusion_matrix, classification_report, roc_auc_score
 )
 from sklearn.pipeline import Pipeline
+from ._validation import check_df_target
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 from sklearn.impute import SimpleImputer
@@ -87,6 +88,7 @@ def _train(model, df: pd.DataFrame = None, target: str = None, X=None, y=None, X
         pipe = Pipeline([("model", model)])
         pipe.fit(X_tr, y_tr)
     else:
+        check_df_target(df, target)
         X_df = df.drop(columns=[target])
         y_df = df[target]
         num_cols, cat_cols = _detect_types(df, target)
@@ -123,9 +125,9 @@ def svm(df: pd.DataFrame = None, target: str = None, kernel: str = "rbf", C: flo
     return _train(SVC(kernel=kernel, C=C, gamma=gamma, probability=True), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
-def linear_svm(df: pd.DataFrame = None, target: str = None, C: float = 1.0, *, X=None, y=None, X_test=None, y_test=None):
+def linear_svm(df: pd.DataFrame = None, target: str = None, C: float = 1.0, max_iter: int = 5000, *, X=None, y=None, X_test=None, y_test=None):
     """Linear SVM (LinearSVC)."""
-    return _train(LinearSVC(C=C, dual=False, class_weight='balanced'), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
+    return _train(LinearSVC(C=C, dual=False, class_weight='balanced', max_iter=max_iter), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test)
 
 
 def gaussian_nb(df: pd.DataFrame = None, target: str = None, *, X=None, y=None, X_test=None, y_test=None):
@@ -222,6 +224,9 @@ def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, *, X
     >>> from breezeml import classifiers, datasets
     >>> results = classifiers.compare(datasets.iris(), "species")
     """
+    if X is None or y is None:
+        check_df_target(df, target)
+
     def _run_one(name, factory_func):
         try:
             with warnings.catch_warnings():
@@ -279,6 +284,9 @@ def detailed_report(df: pd.DataFrame = None, target: str = None, model=None, alg
     >>> info = classifiers.detailed_report(datasets.iris(), "species")
     >>> print(info["accuracy"], info["confusion_matrix"])
     """
+    if X is None or y is None:
+        check_df_target(df, target)
+
     _ALGO_MAP = {
         "logistic":           lambda: LogisticRegression(max_iter=500),
         "svm":                lambda: SVC(probability=True),
@@ -446,6 +454,9 @@ def quick_tune(df: pd.DataFrame = None, target: str = None, algo: str = "random_
     >>> model, params, report = classifiers.quick_tune(datasets.iris(), "species")
     >>> print(params, report)
     """
+    if X is None or y is None:
+        check_df_target(df, target)
+
     factory = _ALGO_FACTORIES.get(algo)
     param_grid = _PARAM_GRIDS.get(algo)
     if factory is None or param_grid is None:

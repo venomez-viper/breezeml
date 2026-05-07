@@ -5,7 +5,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
-## [0.2.5] — Unreleased
+## [0.2.7] — Unreleased
+
+### Added
+- **Test Suite**: Added `tests/` directory with a proper `pytest` suite for input validation, core functions, and classifiers.
+- **Input Validation**: Added `_validation.py` to check for valid pandas DataFrames and target columns across the public API, replacing cryptic errors with clear ones.
+
+### Changed
+- **CI Modernization**: Updated GitHub Actions to run `pytest` with `dev` dependencies instead of running silent python scripts.
+- **License**: Replaced empty stub with the full MIT License text.
+
+### Fixed
+- **`from_csv` Data Leak**: Refactored `from_csv` to properly use the 80/20 test split (via `auto()`) instead of reporting metrics evaluated on the training data.
+
+## [0.2.6] — 2026-05-06
+
+### Added
+- **Cascade Classification**: Chain multiple BreezeML models into a hierarchical cascade.
+- **External Test Sets**: Pass `X_test` / `y_test` to any classifier to evaluate on your own held-out split.
+- **Macro F1**: Every report dict now includes `macro_f1` alongside weighted F1.
+- Aliases `logistic_regression()` and `naive_bayes()`.
+
+## [0.2.5] — 2026-05-06
 
 ### Fixed
 - **Linear SVM Class Imbalance**: Added `class_weight='balanced'` globally to all underlying `LinearSVC` initializations (`linear_svm`, `compare`, `detailed_report`). This forces the scikit-learn optimization engine to penalize misclassifications on tiny, sparse target classes effectively, skyrocketing F1-score performance out-of-the-box for highly skewed NLP classification datasets.

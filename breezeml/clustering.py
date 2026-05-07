@@ -1,5 +1,5 @@
 """
-BreezeML Clustering (v0.1.2)
+BreezeML Clustering (v0.2.7)
 Simple clustering helpers with light preprocessing.
 """
 from __future__ import annotations

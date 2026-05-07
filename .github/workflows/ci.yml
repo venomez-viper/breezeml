@@ -26,12 +26,8 @@ jobs:
       - name: 📦 Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e ".[dev]"
 
-      - name: ✅ Run example demos (act as tests)
+      - name: ✅ Run tests with pytest
         run: |
-          python examples/test_classification.py
-          python examples/test_regression.py
-          python examples/test_save_load.py
-          if [ -f examples/test_classifiers.py ]; then python examples/test_classifiers.py; fi
-          if [ -f examples/test_clustering.py ]; then python examples/test_clustering.py; fi
+          pytest tests/ -v

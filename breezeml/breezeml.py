@@ -2,11 +2,13 @@
 BreezeML: Beginner-friendly wrapper around scikit-learn
 
 Created by Akash Anipakalu Giridhar 🔥✨
-v0.2.5
+v0.2.7
 """
 import pandas as pd
 import numpy as np
 import joblib
+
+from ._validation import check_df_target
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -67,6 +69,7 @@ def _build_preprocessor(numeric, categorical):
 
 
 def classify(df, target, algo="forest", return_report=True):
+    check_df_target(df, target)
     X = df.drop(columns=[target])
     y = df[target]
     numeric, categorical = _detect_types(df, target)
@@ -92,6 +95,7 @@ def classify(df, target, algo="forest", return_report=True):
 
 
 def regress(df, target, algo="forest", return_report=True):
+    check_df_target(df, target)
     X = df.drop(columns=[target])
     y = df[target]
     numeric, categorical = _detect_types(df, target)
@@ -119,6 +123,7 @@ def regress(df, target, algo="forest", return_report=True):
 
 
 def fit(df, target):
+    check_df_target(df, target)
     y = df[target]
     if y.dtype == "object" or y.nunique() < 20:
         m, _ = classify(df, target)
@@ -133,26 +138,11 @@ def predict(model, X):
 
 def from_csv(path, target):
     df = pd.read_csv(path)
-    model = fit(df, target)
-    y = df[target]
-    preds = model.predict(df.drop(columns=[target]))
-
-    if model.task == "classification":
-        return model, {
-            "accuracy": float(accuracy_score(y, preds)),
-            "f1": float(f1_score(y, preds, average="weighted"))
-        }
-    else:
-        mse = mean_squared_error(y, preds)
-        rmse = float(np.sqrt(mse))
-        return model, {
-            "r2": float(r2_score(y, preds)),
-            "mae": float(mean_absolute_error(y, preds)),
-            "rmse": rmse
-        }
+    return auto(df, target)
 
 
 def report(model, df):
+    check_df_target(df, model.target)
     y = df[model.target]
     preds = model.predict(df.drop(columns=[model.target]))
     if model.task == "classification":
@@ -184,6 +174,7 @@ def load(path):
 
 def auto(df, target):
     """Automatically pick classification or regression based on target."""
+    check_df_target(df, target)
     y = df[target]
     if y.dtype == "object" or y.nunique() < 20:
         return classify(df, target)
