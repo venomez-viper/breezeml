@@ -18,7 +18,6 @@ New in v0.2.0:
 """
 from __future__ import annotations
 import warnings
-import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
@@ -462,7 +461,6 @@ def quick_tune(df: pd.DataFrame = None, target: str = None, algo: str = "random_
         X_tr, X_te, y_tr, y_te = train_test_split(X_df, y_df, test_size=0.2, random_state=42, stratify=stratify)
 
     # Cap n_iter to actual grid size so we don't get warnings
-    from itertools import product as _product
     grid_size = 1
     for v in param_grid.values():
         grid_size *= len(v)

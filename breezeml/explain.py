@@ -13,7 +13,6 @@ def explain(model, df, target_col=None):
     """
     try:
         import shap
-        import matplotlib.pyplot as plt
     except ImportError:
         raise ImportError(
             "The 'shap' and 'matplotlib' libraries are required for explainability.\n"
@@ -74,7 +73,6 @@ def explain(model, df, target_col=None):
     # Generic fallback
     else:
         # For SVM with RBF, KNN, MLP, etc., use KernelExplainer on a sample for speed
-        import numpy as np
         background = shap.sample(X_transformed, 100) if X_transformed.shape[0] > 100 else X_transformed
         explainer = shap.KernelExplainer(final_model.predict, background)
         shap_values = explainer.shap_values(X_transformed)

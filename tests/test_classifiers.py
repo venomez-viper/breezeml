@@ -1,4 +1,3 @@
-import pytest
 from breezeml import datasets, classifiers
 
 def test_logistic():
