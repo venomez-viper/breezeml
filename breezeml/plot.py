@@ -34,6 +34,26 @@ def confusion_matrix(model, X_test, y_test, cmap="Blues"):
     plt.show()
 
 
+def pr_curve(model, X_test, y_test):
+    try:
+        from sklearn.metrics import PrecisionRecallDisplay
+    except ImportError as exc:
+        raise ImportError("scikit-learn is required for PR curve plotting.") from exc
+
+    plt = _require_matplotlib()
+    pipeline = getattr(model, "pipeline", model)
+    if not hasattr(pipeline, "predict_proba") and not hasattr(pipeline, "decision_function"):
+        raise TypeError("This model does not support probability predictions required for a PR curve.")
+
+    print("BreezeML Generating PR curve plot...")
+    fig, ax = plt.subplots(figsize=(8, 6))
+    PrecisionRecallDisplay.from_estimator(pipeline, X_test, y_test, ax=ax)
+    plt.title("Precision-Recall Curve", pad=20, fontsize=14)
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
 def roc_curve(model, X_test, y_test):
     try:
         from sklearn.metrics import RocCurveDisplay
