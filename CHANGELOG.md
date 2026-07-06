@@ -5,6 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.5.0] - 2026-07-06
+
+### Added
+- **The zen garden**: `breezeml.zen()` prints the Zen of BreezeML - kaze no michi, the way of the wind - fifteen machine learning haiku under falling sakura. `breezeml.haiku()` carries in a single haiku; `breezeml.fortune()` draws an omikuji (shrine fortune slip) for your ML day, from Dai-kichi to Kyou. Inspired by the guiding wind: BreezeML does not push you to the destination, it shows the way.
+- **Honesty easter eggs**: a perfect 1.0 accuracy atop `classifiers.compare()` earns a gentle warning about easy problems and leaky targets; when the naive baseline wins `timeseries.compare()`, the leaderboard admits your series may be a random walk.
+
 ## [1.4.0] - 2026-07-06
 
 ### Added

@@ -462,6 +462,10 @@ def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, prog
                     acc = f"{row['accuracy']:.4f} +/- {row['accuracy_std']:.4f}"
                     f1_value = f"{row['f1']:.4f} +/- {row['f1_std']:.4f}"
                 print(f"{i:<6}{row['classifier']:<25}{acc:<22}{f1_value:<22}")
+        top = results[0].get("accuracy")
+        if top is not None and top >= 1.0:
+            print("Perfect accuracy detected. Either the problem is easy or the target")
+            print("leaked into the features. Both deserve a second look before bragging.")
         print()
 
     return results

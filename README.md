@@ -76,6 +76,7 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 | **Time series** *(v1.2)* | `timeseries.forecast()` and `compare()` with walk-forward CV and a mandatory naive baseline |
 | **Drift monitoring** *(v1.3)* | `drift.check()` + a live `/drift` endpoint in every deployed API; PSI, new categories, range violations |
 | **Live progress bars** *(v1.4)* | `compare()`, `automl()`, and `timeseries.compare()` show training progress; pure stdlib, no tqdm |
+| **The zen garden** *(v1.5)* | `zen()`, `haiku()`, and `fortune()` - ML wisdom as haiku and omikuji, under falling sakura |
 | **Zero lock-in export** *(v1.0)* | `export()` writes a standalone sklearn training script with no breezeml imports |
 | **Model cards** *(v1.0)* | `card()` generates honest markdown model cards with auto-detected caveats |
 | **Teaching narration** *(v1.0)* | `explain_decisions=True` explains every pipeline choice in plain English |
@@ -725,6 +726,26 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] Time-series helpers (`breezeml.timeseries`) with walk-forward CV and naive-baseline honesty check *(v1.2)*
 - [x] Drift monitoring (`breezeml.drift`) with a live `/drift` endpoint in deployed APIs *(v1.3)*
 - [ ] ONNX export for categorical pipelines
+
+---
+
+## The Zen Garden
+
+BreezeML is named for the wind, and the wind has opinions.
+
+```python
+import breezeml
+
+breezeml.zen()      # the Zen of BreezeML: 15 ML haiku, kaze no michi
+breezeml.haiku()    # one haiku, carried in on the breeze
+breezeml.fortune()  # draw an omikuji for your model
+# ~ omikuji ~
+# [Kyou (Misfortune)]
+# Beware: a test set has been touched twice. The numbers now flatter.
+```
+
+There are more eggs hidden in the leaderboards. A perfect score is not
+always good news; the wind will tell you why.
 
 ---
 

@@ -202,6 +202,9 @@ def compare(
                 continue
             beats = "baseline" if row["model"].startswith("naive") else ("yes" if row["beats_naive"] else "NO")
             print(f"{i:<6}{row['model']:<22}{row['mae']:<12}{row['rmse']:<12}{beats:<12}")
+        if results and results[0]["model"].startswith("naive"):
+            print("The naive baseline won. Your series may be a random walk - no amount")
+            print("of gradient boosting outsmarts a coin. Consider more history or exogenous data.")
         print()
 
     return results
