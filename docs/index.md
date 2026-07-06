@@ -18,7 +18,7 @@ low-code ML library makes together:
 4. **AI agents can use it.** [`breezeml-mcp`](guides/mcp.md) is a built-in
    Model Context Protocol server for Claude and other agents.
 
-Plus everything from earlier releases: 12 classifiers, 10 regressors,
+Plus everything from earlier releases: 18 classifiers, 16 regressors,
 comparison leaderboards, hyperparameter search, cross-validation, feature
 engineering, optional XGBoost/LightGBM, plotting and SHAP explainability.
 

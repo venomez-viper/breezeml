@@ -7,9 +7,22 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import ElasticNet, Lasso, LinearRegression, Ridge
+from sklearn.ensemble import (
+    AdaBoostRegressor,
+    ExtraTreesRegressor,
+    GradientBoostingRegressor,
+    HistGradientBoostingRegressor,
+    RandomForestRegressor,
+)
+from sklearn.linear_model import (
+    BayesianRidge,
+    ElasticNet,
+    HuberRegressor,
+    Lasso,
+    LinearRegression,
+    Ridge,
+    SGDRegressor,
+)
 from sklearn.metrics import (
     explained_variance_score,
     make_scorer,
@@ -361,6 +374,45 @@ def lightgbm(
     )
 
 
+def hist_gradient_boosting(
+    df: pd.DataFrame = None,
+    target: str = None,
+    learning_rate: float = 0.1,
+    max_iter: int = 200,
+    random_state: int = 42,
+    *,
+    X=None,
+    y=None,
+    X_test=None,
+    y_test=None,
+    cv=None,
+):
+    return _train(
+        HistGradientBoostingRegressor(learning_rate=learning_rate, max_iter=max_iter, random_state=random_state),
+        df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv,
+    )
+
+
+def extra_trees(df: pd.DataFrame = None, target: str = None, n_estimators: int = 200, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(ExtraTreesRegressor(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def adaboost(df: pd.DataFrame = None, target: str = None, n_estimators: int = 100, learning_rate: float = 1.0, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(AdaBoostRegressor(n_estimators=n_estimators, learning_rate=learning_rate, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def huber(df: pd.DataFrame = None, target: str = None, epsilon: float = 1.35, max_iter: int = 500, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(HuberRegressor(epsilon=epsilon, max_iter=max_iter), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def bayesian_ridge(df: pd.DataFrame = None, target: str = None, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(BayesianRidge(), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def sgd(df: pd.DataFrame = None, target: str = None, alpha: float = 1e-4, max_iter: int = 1000, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(SGDRegressor(alpha=alpha, max_iter=max_iter, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
 def _base_regressor_factories():
     return {
         "Linear Regression": lambda: LinearRegression(),
@@ -373,6 +425,12 @@ def _base_regressor_factories():
         "Gradient Boosting": lambda: GradientBoostingRegressor(n_estimators=200, random_state=42),
         "KNN": lambda: KNeighborsRegressor(),
         "MLP (Neural Net)": lambda: MLPRegressor(max_iter=500, random_state=42),
+        "Hist Gradient Boosting": lambda: HistGradientBoostingRegressor(random_state=42),
+        "Extra Trees": lambda: ExtraTreesRegressor(n_estimators=200, random_state=42),
+        "AdaBoost": lambda: AdaBoostRegressor(random_state=42),
+        "Huber": lambda: HuberRegressor(max_iter=500),
+        "Bayesian Ridge": lambda: BayesianRidge(),
+        "SGD (linear)": lambda: SGDRegressor(max_iter=1000, random_state=42),
     }
 
 
@@ -391,9 +449,11 @@ def _regressor_factories():
     return factories
 
 
-def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, *, X=None, y=None, cv=None):
+def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, progress: bool | None = None, *, X=None, y=None, cv=None):
     if X is None or y is None:
         check_df_target(df, target)
+    if progress is None:
+        progress = show
 
     def _run_one(name, factory_func):
         try:
@@ -405,11 +465,9 @@ def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, *, X
             print(f"Warning: {name} failed with error: {exc}")
             return {"regressor": name, "r2": None, "mae": None, "rmse": None}
 
-    tasks = [delayed(_run_one)(name, factory) for name, factory in _regressor_factories().items()]
-    try:
-        results = Parallel(n_jobs=-1)(tasks)
-    except PermissionError:
-        results = [_run_one(name, factory) for name, factory in _regressor_factories().items()]
+    from .classifiers import _run_compare_tasks
+
+    results = _run_compare_tasks(_regressor_factories(), _run_one, progress, "Training regressors")
     results.sort(key=lambda row: row["r2"] if row["r2"] is not None else float("-inf"), reverse=True)
 
     if show:
@@ -452,6 +510,12 @@ def _algo_factories():
         "gradient_boosting": lambda: GradientBoostingRegressor(random_state=42),
         "knn": lambda: KNeighborsRegressor(),
         "mlp": lambda: MLPRegressor(random_state=42, max_iter=500),
+        "hist_gradient_boosting": lambda: HistGradientBoostingRegressor(random_state=42),
+        "extra_trees": lambda: ExtraTreesRegressor(n_estimators=200, random_state=42),
+        "adaboost": lambda: AdaBoostRegressor(random_state=42),
+        "huber": lambda: HuberRegressor(max_iter=500),
+        "bayesian_ridge": lambda: BayesianRidge(),
+        "sgd": lambda: SGDRegressor(max_iter=1000, random_state=42),
     }
     try:
         _load_xgb_regressor()
@@ -523,6 +587,10 @@ _PARAM_GRIDS = {
     "gradient_boosting": {"model__n_estimators": [100, 200, 500], "model__learning_rate": [0.01, 0.1, 0.2], "model__max_depth": [2, 3, 5]},
     "knn": {"model__n_neighbors": [3, 5, 7, 11, 15], "model__weights": ["uniform", "distance"], "model__metric": ["euclidean", "manhattan"]},
     "mlp": {"model__hidden_layer_sizes": [(50,), (100,), (100, 50)], "model__learning_rate_init": [0.001, 0.01], "model__max_iter": [300, 500]},
+    "hist_gradient_boosting": {"model__learning_rate": [0.01, 0.05, 0.1, 0.2], "model__max_iter": [100, 200, 400], "model__max_depth": [None, 3, 6, 10]},
+    "extra_trees": {"model__n_estimators": [100, 200, 500], "model__max_depth": [5, 10, 20, None]},
+    "adaboost": {"model__n_estimators": [50, 100, 200], "model__learning_rate": [0.01, 0.1, 0.5, 1.0]},
+    "sgd": {"model__alpha": [1e-5, 1e-4, 1e-3], "model__penalty": ["l2", "l1", "elasticnet"]},
     "xgboost": {
         "model__n_estimators": [100, 200, 500],
         "model__max_depth": [3, 5, 7, 10],

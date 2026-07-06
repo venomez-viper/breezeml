@@ -75,6 +75,7 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 | **BreezeAutoML** *(v1.1)* | `automl()` screens every model then tunes the best within a time budget; optional Optuna backend |
 | **Time series** *(v1.2)* | `timeseries.forecast()` and `compare()` with walk-forward CV and a mandatory naive baseline |
 | **Drift monitoring** *(v1.3)* | `drift.check()` + a live `/drift` endpoint in every deployed API; PSI, new categories, range violations |
+| **Live progress bars** *(v1.4)* | `compare()`, `automl()`, and `timeseries.compare()` show training progress; pure stdlib, no tqdm |
 | **Zero lock-in export** *(v1.0)* | `export()` writes a standalone sklearn training script with no breezeml imports |
 | **Model cards** *(v1.0)* | `card()` generates honest markdown model cards with auto-detected caveats |
 | **Teaching narration** *(v1.0)* | `explain_decisions=True` explains every pipeline choice in plain English |
@@ -82,8 +83,8 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 | **MCP server for AI agents** *(v1.0)* | `breezeml-mcp` lets Claude & other agents train/compare/explain/deploy models |
 | **Dependency contract** *(v1.0)* | Core needs only sklearn, pandas, numpy, joblib, enforced by CI, forever |
 | **Auto task detection** | Automatically selects classification or regression based on the target column |
-| **12 classifiers** | From Logistic Regression to Neural Nets, available in one function call |
-| **10 regressors** *(v0.3.0)* | From Linear Regression to Gradient Boosting and MLP, available in one function call |
+| **18 classifiers** *(v1.4)* | From Logistic Regression to Hist Gradient Boosting, LDA/QDA, and Neural Nets |
+| **16 regressors** *(v1.4)* | From Linear Regression to Hist Gradient Boosting, Huber, and MLP |
 | **Classifier leaderboard** | `classifiers.compare()` ranks all built-in classifiers by accuracy and F1 |
 | **Regressor leaderboard** *(v0.3.0)* | `regressors.compare()` ranks all built-in regressors by R2, MAE, and RMSE |
 | **Cross-validation support** *(v0.3.0)* | Most classifier and regressor training helpers now accept `cv=` and return mean/std metrics |
@@ -105,9 +106,9 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 ```text
 breezeml/
 |-- breezeml.py        # Core API: fit, predict, auto, from_csv, save, load
-|-- classifiers.py     # 12 classifiers + compare, detailed_report, quick_tune
-|-- regressors.py      # 10 regressors + compare, detailed_report, quick_tune
-|-- clustering.py      # kmeans, agglomerative, dbscan
+|-- classifiers.py     # 18 classifiers + compare, detailed_report, quick_tune
+|-- regressors.py      # 16 regressors + compare, detailed_report, quick_tune
+|-- clustering.py      # kmeans, agglomerative, dbscan, gaussian_mixture, birch, spectral
 |-- features.py        # feature selection, importances, PCA, polynomial expansion
 |-- text.py            # semantic text embeddings
 |-- explain.py         # SHAP explainability
@@ -388,6 +389,12 @@ The standard report includes:
 | `classifiers.adaboost` | AdaBoost | Ensemble boosting |
 | `classifiers.extra_trees` | Extra Trees | Faster random-forest-style ensemble |
 | `classifiers.mlp` | Neural Network (MLP) | Deep learning baseline |
+| `classifiers.hist_gradient_boosting` *(v1.4)* | Hist Gradient Boosting | sklearn's LightGBM-class booster, fast on large data |
+| `classifiers.ridge` *(v1.4)* | Ridge Classifier | Very fast regularized linear baseline |
+| `classifiers.sgd` *(v1.4)* | SGD (linear) | Scales to very large datasets |
+| `classifiers.lda` *(v1.4)* | Linear Discriminant Analysis | Classic, strong on small data |
+| `classifiers.qda` *(v1.4)* | Quadratic Discriminant Analysis | Curved class boundaries |
+| `classifiers.complement_nb` *(v1.4)* | Complement Naive Bayes | Best NB variant for imbalanced text |
 
 #### `classifiers.compare(df, target)`
 
@@ -466,6 +473,12 @@ The standard regression report includes:
 | `regressors.gradient_boosting` | Gradient Boosting Regressor | Often the strongest built-in option |
 | `regressors.knn` | K-Nearest Neighbors Regressor | Non-parametric |
 | `regressors.mlp` | Neural Network (MLP) Regressor | Deep learning baseline |
+| `regressors.hist_gradient_boosting` *(v1.4)* | Hist Gradient Boosting | sklearn's LightGBM-class booster, fast on large data |
+| `regressors.extra_trees` *(v1.4)* | Extra Trees Regressor | Faster random-forest-style ensemble |
+| `regressors.adaboost` *(v1.4)* | AdaBoost Regressor | Ensemble boosting |
+| `regressors.huber` *(v1.4)* | Huber Regressor | Robust to outliers |
+| `regressors.bayesian_ridge` *(v1.4)* | Bayesian Ridge | Uncertainty-aware linear model |
+| `regressors.sgd` *(v1.4)* | SGD Regressor | Scales to very large datasets |
 
 #### `regressors.compare(df, target)`
 
@@ -628,6 +641,9 @@ print(res["labels"][:10])
 | `clustering.kmeans(df, n_clusters)` | K-Means |
 | `clustering.agglomerative(df, n_clusters)` | Agglomerative Hierarchical |
 | `clustering.dbscan(df, eps, min_samples)` | DBSCAN |
+| `clustering.gaussian_mixture(df, n_clusters)` *(v1.4)* | Gaussian Mixture (soft clustering + BIC) |
+| `clustering.birch(df, n_clusters)` *(v1.4)* | Birch (memory-efficient, large data) |
+| `clustering.spectral(df, n_clusters)` *(v1.4)* | Spectral (non-convex cluster shapes) |
 
 ---
 
@@ -655,7 +671,7 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 |---|---|
 | `breezeml_quickstart.ipynb` | Interactive notebook walkthrough |
 | `test_classification.py` | Basic classification smoke test |
-| `test_classifiers.py` | All 12 classifiers end-to-end |
+| `test_classifiers.py` | All classifiers end-to-end |
 | `test_clustering.py` | Clustering algorithms |
 | `test_boost.py` | Optional XGBoost and LightGBM coverage |
 | `test_features.py` | Feature engineering helpers |
@@ -680,8 +696,8 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 ## Roadmap
 
 - [x] Core `fit` / `predict` / `auto` API
-- [x] 12 classifiers with unified interface
-- [x] 10 regressors with leaderboard, detailed reports, and tuning *(v0.3.0)*
+- [x] 18 classifiers with unified interface (6 added in v1.4)
+- [x] 16 regressors with leaderboard, detailed reports, and tuning (6 added in v1.4)
 - [x] Classifier leaderboard (`compare`)
 - [x] Regressor leaderboard (`regressors.compare`) *(v0.3.0)*
 - [x] Cross-validation support across classifiers and regressors *(v0.3.0)*

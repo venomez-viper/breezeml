@@ -22,6 +22,7 @@ from sklearn.pipeline import Pipeline
 from ._meta import build_meta
 from ._narrate import format_narration, narrate
 from ._preprocessing import _build_preprocessor, _detect_types
+from ._progress import ProgressBar
 from ._validation import check_df_target
 
 __all__ = ["automl"]
@@ -58,14 +59,18 @@ def _make_pipe(df, target, factory, algo_name):
     return Pipeline([("pre", pre), ("model", factory())])
 
 
-def _screen(df, target, task, scoring, deadline, cv):
+def _screen(df, target, task, scoring, deadline, cv, progress=False):
     """Quick cross-validated score for every candidate until the deadline."""
     X = df.drop(columns=[target])
     y = df[target]
+    candidates = _candidates(task)
+    bar = ProgressBar(len(candidates), desc="Screening models", enabled=progress)
     results = []
-    for name, factory, grid in _candidates(task):
+    for name, factory, grid in candidates:
         if time.monotonic() > deadline:
+            bar.close(f"Screening stopped at budget: {len(results)}/{len(candidates)} models")
             break
+        bar.update(name)
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -82,6 +87,8 @@ def _screen(df, target, task, scoring, deadline, cv):
             })
         except Exception as exc:
             results.append({"model": name, "score": None, "error": str(exc)[:120]})
+    else:
+        bar.close()
     results.sort(key=lambda r: r["score"] if r["score"] is not None else float("-inf"), reverse=True)
     return results
 
@@ -225,7 +232,7 @@ def automl(
         print(f"BreezeAutoML: task={task}, metric={scoring}, budget={time_budget}s, backend={backend}")
         print(f"Stage 1/2: screening models ({int(time_budget * _SCREEN_FRACTION)}s max)...")
 
-    leaderboard = _screen(df, target, task, scoring, screen_deadline, cv)
+    leaderboard = _screen(df, target, task, scoring, screen_deadline, cv, progress=show)
     screened = [r for r in leaderboard if r.get("score") is not None]
     if not screened:
         raise RuntimeError("AutoML screening failed for every model; check your data.")

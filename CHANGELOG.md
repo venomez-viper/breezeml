@@ -5,6 +5,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.4.0] - 2026-07-06
+
+### Added
+- **Live training progress** (`breezeml._progress`): `classifiers.compare()`, `regressors.compare()`, `automl()` screening, and `timeseries.compare()` now show a self-updating progress bar in terminals and clean milestone lines in CI/piped logs. Pure stdlib (the 4-dependency contract rules out tqdm). Control with `progress=True/False`; defaults to the `show` setting.
+- **6 new classifiers**: `hist_gradient_boosting` (sklearn's LightGBM-class booster), `ridge`, `sgd`, `lda`, `qda`, `complement_nb` - 18 total, all in `compare()` and (where tunable) `quick_tune()`.
+- **6 new regressors**: `hist_gradient_boosting`, `extra_trees`, `adaboost`, `huber` (outlier-robust), `bayesian_ridge`, `sgd` - 16 total.
+- **3 new clustering algorithms**: `gaussian_mixture` (soft memberships + BIC), `birch`, `spectral`.
+- **New tuning grids** for hist gradient boosting, ridge, SGD, extra trees, and AdaBoost.
+
 ## [1.3.0] - 2026-07-06
 
 ### Added

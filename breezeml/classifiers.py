@@ -7,7 +7,14 @@ import warnings
 
 import pandas as pd
 from joblib import Parallel, delayed
-from sklearn.ensemble import AdaBoostClassifier, ExtraTreesClassifier, GradientBoostingClassifier, RandomForestClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    ExtraTreesClassifier,
+    GradientBoostingClassifier,
+    HistGradientBoostingClassifier,
+    RandomForestClassifier,
+)
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -19,17 +26,46 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.model_selection import RandomizedSearchCV, cross_validate, train_test_split
-from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.naive_bayes import ComplementNB, GaussianNB, MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import LinearSVC, SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
 
 from ._preprocessing import _build_preprocessor, _detect_types
+from ._progress import ProgressBar
 from ._validation import check_df_target
+
+
+def _run_compare_tasks(factories, run_one, progress, desc):
+    """Run leaderboard tasks in parallel with a live progress bar.
+
+    Uses joblib's generator mode (joblib >= 1.3) so the bar advances as
+    each model finishes; falls back to batch mode on older joblib, and to
+    a serial loop where process pools are blocked.
+    """
+    bar = ProgressBar(len(factories), desc=desc, enabled=progress)
+    items = list(factories.items())
+    tasks = [delayed(run_one)(name, factory) for name, factory in items]
+    results = []
+    try:
+        try:
+            for result in Parallel(n_jobs=-1, return_as="generator")(tasks):
+                results.append(result)
+                bar.update(next(iter(result.values())))
+        except TypeError:  # joblib < 1.3: no generator support
+            results = Parallel(n_jobs=-1)(tasks)
+            bar.count = len(results)
+    except PermissionError:
+        results = []
+        for name, factory in items:
+            results.append(run_one(name, factory))
+            bar.update(name)
+    bar.close()
+    return results
 
 
 def _as_series(y):
@@ -307,6 +343,45 @@ def lightgbm(
     )
 
 
+def hist_gradient_boosting(
+    df: pd.DataFrame = None,
+    target: str = None,
+    learning_rate: float = 0.1,
+    max_iter: int = 200,
+    random_state: int = 42,
+    *,
+    X=None,
+    y=None,
+    X_test=None,
+    y_test=None,
+    cv=None,
+):
+    return _train(
+        HistGradientBoostingClassifier(learning_rate=learning_rate, max_iter=max_iter, random_state=random_state),
+        df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv,
+    )
+
+
+def ridge(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(RidgeClassifier(alpha=alpha), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def sgd(df: pd.DataFrame = None, target: str = None, loss: str = "log_loss", alpha: float = 1e-4, max_iter: int = 1000, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(SGDClassifier(loss=loss, alpha=alpha, max_iter=max_iter, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def lda(df: pd.DataFrame = None, target: str = None, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(LinearDiscriminantAnalysis(), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def qda(df: pd.DataFrame = None, target: str = None, reg_param: float = 0.0, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(QuadraticDiscriminantAnalysis(reg_param=reg_param), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def complement_nb(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(ComplementNB(alpha=alpha), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, force_minmax=True, cv=cv)
+
+
 def _base_classifier_factories():
     return {
         "Logistic Regression": lambda: LogisticRegression(max_iter=500),
@@ -321,6 +396,12 @@ def _base_classifier_factories():
         "AdaBoost": lambda: AdaBoostClassifier(random_state=42),
         "Extra Trees": lambda: ExtraTreesClassifier(n_estimators=200, random_state=42),
         "MLP (Neural Net)": lambda: MLPClassifier(max_iter=500, random_state=42),
+        "Hist Gradient Boosting": lambda: HistGradientBoostingClassifier(random_state=42),
+        "Ridge Classifier": lambda: RidgeClassifier(),
+        "SGD (linear)": lambda: SGDClassifier(loss="log_loss", max_iter=1000, random_state=42),
+        "LDA": lambda: LinearDiscriminantAnalysis(),
+        "QDA": lambda: QuadraticDiscriminantAnalysis(),
+        "Complement NB": lambda: ComplementNB(),
     }
 
 
@@ -339,26 +420,24 @@ def _classifier_factories():
     return factories
 
 
-def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, *, X=None, y=None, cv=None):
+def compare(df: pd.DataFrame = None, target: str = None, show: bool = True, progress: bool | None = None, *, X=None, y=None, cv=None):
     if X is None or y is None:
         check_df_target(df, target)
+    if progress is None:
+        progress = show
 
     def _run_one(name, factory_func):
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                force = name == "Multinomial NB"
+                force = name in ("Multinomial NB", "Complement NB")
                 _, report = _train(factory_func(), df=df, target=target, X=X, y=y, force_minmax=force, cv=cv)
             return {"classifier": name, **report}
         except Exception as exc:
             print(f"Warning: {name} failed with error: {exc}")
             return {"classifier": name, "accuracy": None, "f1": None}
 
-    tasks = [delayed(_run_one)(name, factory) for name, factory in _classifier_factories().items()]
-    try:
-        results = Parallel(n_jobs=-1)(tasks)
-    except PermissionError:
-        results = [_run_one(name, factory) for name, factory in _classifier_factories().items()]
+    results = _run_compare_tasks(_classifier_factories(), _run_one, progress, "Training classifiers")
 
     results.sort(key=lambda row: row["accuracy"] if row["accuracy"] is not None else -1, reverse=True)
 
@@ -402,6 +481,12 @@ def _algo_factories():
         "adaboost": lambda: AdaBoostClassifier(random_state=42),
         "extra_trees": lambda: ExtraTreesClassifier(n_estimators=200, random_state=42),
         "mlp": lambda: MLPClassifier(max_iter=500, random_state=42),
+        "hist_gradient_boosting": lambda: HistGradientBoostingClassifier(random_state=42),
+        "ridge": lambda: RidgeClassifier(),
+        "sgd": lambda: SGDClassifier(loss="log_loss", max_iter=1000, random_state=42),
+        "lda": lambda: LinearDiscriminantAnalysis(),
+        "qda": lambda: QuadraticDiscriminantAnalysis(),
+        "complement_nb": lambda: ComplementNB(),
     }
     try:
         _load_xgb_classifier()
@@ -486,6 +571,9 @@ _PARAM_GRIDS = {
     "adaboost": {"model__n_estimators": [50, 100, 200], "model__learning_rate": [0.01, 0.1, 0.5, 1.0]},
     "extra_trees": {"model__n_estimators": [100, 200, 500], "model__max_depth": [5, 10, 20, None]},
     "mlp": {"model__hidden_layer_sizes": [(50,), (100,), (100, 50)], "model__learning_rate_init": [0.001, 0.01], "model__max_iter": [300, 500]},
+    "hist_gradient_boosting": {"model__learning_rate": [0.01, 0.05, 0.1, 0.2], "model__max_iter": [100, 200, 400], "model__max_depth": [None, 3, 6, 10]},
+    "ridge": {"model__alpha": [0.1, 1.0, 10.0, 100.0]},
+    "sgd": {"model__alpha": [1e-5, 1e-4, 1e-3], "model__penalty": ["l2", "l1", "elasticnet"], "model__loss": ["log_loss", "hinge"]},
     "xgboost": {
         "model__n_estimators": [100, 200, 500],
         "model__max_depth": [3, 5, 7, 10],

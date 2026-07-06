@@ -22,6 +22,7 @@ from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.neighbors import KNeighborsRegressor
 
+from ._progress import ProgressBar
 from ._validation import check_df_target
 
 __all__ = ["make_features", "compare", "forecast"]
@@ -137,6 +138,7 @@ def compare(
     windows: tuple = (7,),
     cv: int = 3,
     show: bool = True,
+    progress: bool | None = None,
 ) -> list:
     """Walk-forward leaderboard of forecasting models vs the naive baseline.
 
@@ -154,9 +156,14 @@ def compare(
             f"for {cv}-fold walk-forward validation."
         )
 
+    if progress is None:
+        progress = show
+    factories = _model_factories()
+    bar = ProgressBar(len(factories), desc="Walk-forward validation", enabled=progress)
     splitter = TimeSeriesSplit(n_splits=cv)
     results = []
-    for name, factory in _model_factories().items():
+    for name, factory in factories.items():
+        bar.update(name)
         fold_true, fold_pred = [], []
         try:
             for train_idx, test_idx in splitter.split(X):
@@ -175,6 +182,7 @@ def compare(
         except Exception as exc:
             row = {"model": name, "mae": None, "error": str(exc)[:120]}
         results.append(row)
+    bar.close()
 
     naive_mae = next(r["mae"] for r in results if r["model"].startswith("naive"))
     for row in results:
