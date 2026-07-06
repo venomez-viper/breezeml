@@ -68,6 +68,50 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 
 ---
 
+## Start Here: The Garden Path
+
+BreezeML is big, but you never need all of it. It is layered like a garden
+path: **walk only as far as you need**, and every layer is optional. Lost?
+Run `breezeml.guide()` any time for this map in your terminal.
+
+### Breath 1 - your first model (day one, 3 lines)
+
+```python
+from breezeml import datasets, fit, predict
+
+model = fit(datasets.iris(), "species")
+predict(model, new_df)
+```
+
+That is a complete, leakage-safe, stratified, seeded ML workflow. If this
+is all you need, stop here. You are done.
+
+### Breath 2 - understand and choose
+
+```python
+model, report = breezeml.auto(df, "target", explain_decisions=True)  # narrates every choice
+breezeml.classifiers.compare(df, "target")   # leaderboard of 18 models
+breezeml.card(model, "MODEL_CARD.md")        # honest model card
+```
+
+### Breath 3 - automate and ship
+
+```python
+breezeml.automl(df, "target", time_budget=60)  # search everything, honestly
+breezeml.export(model, "train.py")             # pure sklearn, zero lock-in
+breezeml.deploy(model, "api/")                 # FastAPI + Docker
+breezeml.drift.check(model, new_df)            # production drift report
+```
+
+### Breath 4 - beyond
+
+Time series forecasting, clustering, feature engineering, text embeddings,
+SHAP explainability, the MCP server for AI agents, and the zen garden.
+Everything below this line is reference material - come back when you
+need it.
+
+---
+
 ## Key Features
 
 | Feature | Description |
@@ -102,19 +146,39 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 
 ---
 
-## Architecture
+## Architecture: The Four Breaths
+
+BreezeML follows a layered design (in the spirit of fastai's layered API):
+approachable at the top, hackable underneath, honest everywhere.
+
+```text
+ Breath 1  ONE LINE        fit . predict . auto . from_csv
+           |               "give me a sound model"
+ Breath 2  UNDERSTAND      compare . quick_tune . explain_decisions . card
+           |               "which model, and why?"
+ Breath 3  SHIP            automl . export . deploy . drift . timeseries
+           |               "automate, productionize, monitor"
+ Breath 4  EXTEND          features . clustering . text . explain . plot . MCP
+                           "toolkits and agents"
+```
 
 ```text
 breezeml/
-|-- breezeml.py        # Core API: fit, predict, auto, from_csv, save, load
-|-- classifiers.py     # 18 classifiers + compare, detailed_report, quick_tune
-|-- regressors.py      # 16 regressors + compare, detailed_report, quick_tune
-|-- clustering.py      # kmeans, agglomerative, dbscan, gaussian_mixture, birch, spectral
-|-- features.py        # feature selection, importances, PCA, polynomial expansion
-|-- text.py            # semantic text embeddings
-|-- explain.py         # SHAP explainability
-|-- plot.py            # plotting helpers
-`-- __init__.py        # public API surface
+|-- breezeml.py        # Breath 1: fit, predict, auto, from_csv, save, load
+|-- classifiers.py     # Breath 2: 18 classifiers + compare, detailed_report, quick_tune
+|-- regressors.py      # Breath 2: 16 regressors + compare, detailed_report, quick_tune
+|-- automl.py          # Breath 3: budget-aware model search
+|-- export.py          # Breath 3: zero lock-in sklearn codegen
+|-- deploy.py          # Breath 3: FastAPI + Docker serving
+|-- drift.py           # Breath 3: PSI drift detection
+|-- timeseries.py      # Breath 3: forecasting with honesty checks
+|-- clustering.py      # Breath 4: 6 clustering algorithms
+|-- features.py        # Breath 4: selection, importances, PCA, polynomial
+|-- text.py            # Breath 4: semantic text embeddings
+|-- explain.py         # Breath 4: SHAP explainability
+|-- plot.py            # Breath 4: plotting helpers
+|-- mcp_server.py      # Breath 4: AI-agent tools (breezeml-mcp)
+`-- __init__.py        # public API + zen garden
 ```
 
 **Internal pipeline**

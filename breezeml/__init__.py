@@ -4,7 +4,7 @@ students, analysts, and AI agents. Train, compare, explain, export, and
 deploy scikit-learn models without drowning in boilerplate.
 """
 
-__version__ = "1.5.1"
+__version__ = "1.6.0"
 __author__ = "Akash Anipakalu Giridhar"
 
 from .breezeml import auto, classify, creator, datasets, fit, from_csv, load, predict, regress, report, save
@@ -13,6 +13,7 @@ from .card import card
 from .deploy import deploy
 from .automl import automl
 from ._fun import fortune, haiku, sensei, zen
+from ._guide import guide
 from . import classifiers, clustering, drift, explain, features, plot, regressors, text, timeseries
 
 __all__ = [
@@ -44,4 +45,5 @@ __all__ = [
     "haiku",
     "fortune",
     "sensei",
+    "guide",
 ]

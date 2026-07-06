@@ -38,6 +38,7 @@ plugins:
 nav:
   - Home: index.md
   - Examples: examples.md
+  - Architecture: architecture.md
   - Guides:
       - AutoML (budget search): guides/automl.md
       - Time Series (forecasting): guides/timeseries.md

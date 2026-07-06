@@ -5,6 +5,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.6.0] - 2026-07-06
+
+### Added
+- **`breezeml.guide()`**: an in-library map of the garden path, so nobody ever feels lost in a big library.
+- **The Four Breaths**: BreezeML's layered architecture is now explicit and documented (`docs/architecture.md`): Breath 1 one-liners, Breath 2 understand-and-choose, Breath 3 automate-and-ship, Breath 4 extensions. Each layer is complete on its own; nothing above it is required.
+
+### Changed
+- **README restructured for beginners**: a "Start Here: The Garden Path" section walks new users through the four breaths; the architecture section shows the layered design. The reference material stays, but day one needs only the first screen.
+
 ## [1.5.1] - 2026-07-06
 
 ### Added
