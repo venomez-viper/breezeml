@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.0.1] - 2026-07-05
+
+### Changed
+- **Repositioning**: BreezeML is now described everywhere as a beginner-friendly, production-aware ML workflow layer for students, analysts, and AI agents. Updated PyPI metadata, README, docs, and module docstrings.
+- **Python 3.9 fix**: dependency contract test now works on Python 3.9 (`sys.stdlib_module_names` fallback via `sysconfig`).
+- **Publish safety**: the PyPI publish workflow now runs ruff and the full test suite before building and uploading.
+
 ## [1.0.0] - 2026-07-05
 
 The "legendary" release: zero lock-in, honest reporting, one-line deployment, and first-class support for AI agents.
