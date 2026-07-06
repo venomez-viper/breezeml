@@ -24,7 +24,15 @@ ALLOWED_THIRD_PARTY = {"sklearn", "pandas", "numpy", "joblib"}
 
 
 def _stdlib_names():
-    return set(sys.stdlib_module_names)
+    names = getattr(sys, "stdlib_module_names", None)  # Python 3.10+
+    if names is not None:
+        return set(names)
+    # Python 3.9 fallback: derive from the stdlib directory + builtins
+    import sysconfig
+
+    stdlib_dir = Path(sysconfig.get_paths()["stdlib"])
+    found = {p.name.split(".")[0] for p in stdlib_dir.iterdir()}
+    return found | set(sys.builtin_module_names)
 
 
 def _module_level_imports(tree: ast.Module):
