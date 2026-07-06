@@ -2,10 +2,13 @@
 BreezeML public API.
 """
 
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __author__ = "Akash Anipakalu Giridhar"
 
 from .breezeml import auto, classify, creator, datasets, fit, from_csv, load, predict, regress, report, save
+from .export import export
+from .card import card
+from .deploy import deploy
 from . import classifiers, clustering, explain, features, plot, regressors, text
 
 __all__ = [
@@ -20,6 +23,9 @@ __all__ = [
     "regress",
     "from_csv",
     "report",
+    "export",
+    "card",
+    "deploy",
     "classifiers",
     "clustering",
     "regressors",

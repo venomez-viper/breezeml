@@ -5,6 +5,26 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.0.0] - 2026-07-05
+
+The "legendary" release: zero lock-in, honest reporting, one-line deployment, and first-class support for AI agents.
+
+### Added
+- **`export()` / `model.export()`**: Generate a standalone scikit-learn training script that reproduces the exact trained pipeline (imputers, scaler, encoder, estimator, seed, split) with zero breezeml imports. Graduate from BreezeML anytime.
+- **`card()` / `model.card()`**: Auto-generated markdown model cards with data profile, metrics, every pipeline decision explained, and auto-detected caveats (small data, class imbalance, heavy imputation, drift and fairness warnings).
+- **Teaching narration**: `explain_decisions=True` on `auto()` / `classify()` / `regress()` (and `model.explain_decisions()`) narrates every automatic pipeline decision in plain English, generated from measured facts about your data.
+- **`deploy()` / `model.deploy()`**: One line writes a complete serving directory - FastAPI app (`/predict`, `/health`, Swagger docs), Dockerfile, requirements, and the raw sklearn pipeline. The deployed app never imports breezeml.
+- **ONNX export**: `breezeml.deploy.to_onnx()` for numeric pipelines via the `[onnx]` extra.
+- **MCP server (`breezeml-mcp`)**: A Model Context Protocol server exposing `inspect_data`, `compare`, `train`, `predict`, `explain`, `model_card`, `export`, `deploy`, and `save` as agent tools. AI agents get BreezeML's statistical guardrails instead of hand-rolled sklearn.
+- **Dependency contract**: CI-enforced test guaranteeing core `import breezeml` needs only scikit-learn, pandas, numpy, and joblib. "4 dependencies. Always."
+- **Benchmarks**: `benchmarks/run_benchmarks.py` measuring import time, leaderboard time, accuracy, and user LOC against PyCaret and LazyPredict.
+- **Training metadata**: Models trained via the core API now carry a `meta` dict (data profile, decisions, seed, metrics) powering cards, narration, and export.
+- **Docs**: New guides for export, model cards, deployment, and the MCP server.
+
+### Changed
+- **Version**: 1.0.0; development status is now Production/Stable.
+- **New extras**: `[deploy]` (fastapi, uvicorn), `[onnx]` (skl2onnx), `[mcp]` (mcp SDK).
+
 ## [0.3.0] - 2026-05-07
 
 ### Added

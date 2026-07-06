@@ -14,7 +14,9 @@
 [![PyPI Downloads](https://img.shields.io/pypi/dm/breezeml?color=blue&label=PyPI%20Downloads)](https://pypi.org/project/breezeml/)
 ![CI Status](https://github.com/venomez-viper/breezeml/actions/workflows/ci.yml/badge.svg)
 [![GitHub Release](https://img.shields.io/github/v/release/venomez-viper/breezeml?color=green)](https://github.com/venomez-viper/breezeml/releases)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![4 Dependencies](https://img.shields.io/badge/core%20deps-4%2C%20always-brightgreen)](tests/test_dependency_contract.py)
+[![MCP Server](https://img.shields.io/badge/MCP-agent%20ready-blueviolet)](docs/guides/mcp.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/venomez-viper/breezeml/blob/main/examples/breezeml_quickstart.ipynb)
 [![scikit-learn](https://img.shields.io/badge/built%20on-scikit--learn-F7931E?logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
@@ -29,7 +31,7 @@
 
 ## Overview
 
-BreezeML is a high-level machine learning library built on top of **scikit-learn**, designed to remove boilerplate while keeping the underlying workflow statistically sound. It handles preprocessing, train/test splits, model comparison, tuning, evaluation, and persistence behind a compact API that stays readable for both beginners and working practitioners.
+BreezeML is a high-level machine learning library built on top of **scikit-learn**, designed to remove boilerplate while keeping the underlying workflow statistically sound. It handles preprocessing, train/test splits, model comparison, tuning, evaluation, deployment, and persistence behind a compact API that stays readable for both beginners and working practitioners.
 
 ```python
 from breezeml import datasets, fit, predict
@@ -43,10 +45,39 @@ That is the core idea: fewer moving parts, fewer repetitive preprocessing steps,
 
 ---
 
+## Why BreezeML (v1.0)
+
+Four promises no other low-code ML library makes together:
+
+1. **4 dependencies. Always.** Core installs with only scikit-learn, pandas, numpy, joblib, [CI-enforced](tests/test_dependency_contract.py). No dependency hell, ever.
+2. **Zero lock-in.** `export()` hands you a standalone sklearn script reproducing your exact pipeline, with no breezeml import. Graduate anytime.
+3. **It teaches you.** `explain_decisions=True` narrates every pipeline choice in plain English, and `card()` writes an honest model card with auto-detected caveats.
+4. **AI agents can use it.** `breezeml-mcp` is a built-in [MCP server](docs/guides/mcp.md): Claude and other agents train, compare, explain, and deploy models with sound statistical defaults.
+
+```python
+import breezeml
+from breezeml import datasets
+
+df = datasets.iris()
+model, report = breezeml.auto(df, "species", explain_decisions=True)  # learn while training
+
+breezeml.card(model, "MODEL_CARD.md")     # honest model card
+breezeml.export(model, "train.py")        # pure-sklearn script, zero lock-in
+breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to run
+```
+
+---
+
 ## Key Features
 
 | Feature | Description |
 |---|---|
+| **Zero lock-in export** *(v1.0)* | `export()` writes a standalone sklearn training script with no breezeml imports |
+| **Model cards** *(v1.0)* | `card()` generates honest markdown model cards with auto-detected caveats |
+| **Teaching narration** *(v1.0)* | `explain_decisions=True` explains every pipeline choice in plain English |
+| **One-line deployment** *(v1.0)* | `deploy()` writes a FastAPI app + Dockerfile serving the raw sklearn pipeline |
+| **MCP server for AI agents** *(v1.0)* | `breezeml-mcp` lets Claude & other agents train/compare/explain/deploy models |
+| **Dependency contract** *(v1.0)* | Core needs only sklearn, pandas, numpy, joblib, enforced by CI, forever |
 | **Auto task detection** | Automatically selects classification or regression based on the target column |
 | **12 classifiers** | From Logistic Regression to Neural Nets, available in one function call |
 | **10 regressors** *(v0.3.0)* | From Linear Regression to Gradient Boosting and MLP, available in one function call |
@@ -116,7 +147,7 @@ cd breezeml
 pip install -e .
 ```
 
-**Requirements:** Python >= 3.8, scikit-learn, pandas, numpy, joblib
+**Requirements:** Python >= 3.9, scikit-learn, pandas, numpy, joblib
 
 Optional extras:
 
@@ -126,6 +157,9 @@ pip install "breezeml[explain]"
 pip install "breezeml[plot]"
 pip install "breezeml[boost]"
 pip install "breezeml[datasets]"
+pip install "breezeml[deploy]"   # fastapi + uvicorn for deploy()
+pip install "breezeml[onnx]"     # ONNX export
+pip install "breezeml[mcp]"      # MCP server for AI agents
 pip install "breezeml[all]"
 ```
 
@@ -228,6 +262,61 @@ Persist and restore any trained `EasyModel`.
 save(model, "my_model.joblib")
 model = load("my_model.joblib")
 ```
+
+#### `export(model, path, data_path="YOUR_DATA.csv")` *(v1.0)*
+
+Write a standalone scikit-learn training script that reproduces the exact
+pipeline (imputers, scaler, encoder, estimator, seed, split) with **zero
+breezeml imports**. Also available as `model.export(path)`.
+
+```python
+breezeml.export(model, "train.py", data_path="iris.csv")
+```
+
+#### `card(model, path=None)` *(v1.0)*
+
+Generate an honest markdown model card: data profile, metrics, every
+pipeline decision explained, and auto-detected caveats (small data, class
+imbalance, heavy imputation). Also available as `model.card(path)`.
+
+```python
+print(breezeml.card(model))
+breezeml.card(model, "MODEL_CARD.md")
+```
+
+#### `deploy(model, out_dir, name)` *(v1.0)*
+
+Write a complete serving directory: FastAPI app (`/predict`, `/health`,
+`/docs`), Dockerfile, requirements, and the raw sklearn pipeline. The app
+never imports breezeml. Also available as `model.deploy(out_dir)`.
+
+```python
+breezeml.deploy(model, "api/", name="iris-classifier")
+# cd api && pip install -r requirements.txt && uvicorn app:app
+```
+
+#### Teaching narration *(v1.0)*
+
+```python
+model, report = breezeml.auto(df, "species", explain_decisions=True)
+# BreezeML decisions explained:
+#   1. Detected a classification task: target 'species' has only 3 distinct values...
+#   2. Used a stratified 80/20 train/test split because...
+model.explain_decisions()  # again, anytime
+```
+
+---
+
+### MCP Server for AI Agents *(v1.0)*
+
+BreezeML ships a [Model Context Protocol](https://modelcontextprotocol.io) server so AI agents (Claude Code, Claude Desktop, and other MCP clients) can train, compare, explain, export, and deploy models with statistically sound defaults.
+
+```bash
+pip install breezeml[mcp]
+claude mcp add breezeml -- breezeml-mcp
+```
+
+Tools: `inspect_data`, `compare`, `train`, `predict`, `explain`, `model_card`, `export`, `deploy`, `save`. See the [MCP guide](docs/guides/mcp.md).
 
 ---
 
@@ -571,9 +660,33 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] Native semantic text embeddings (`breezeml.text`) *(v0.2.9)*
 - [x] `explain()` - SHAP-based feature importance *(v0.2.9)*
 - [x] Native plotting (`plot_confusion_matrix`, `plot_roc`) *(v0.2.9)*
+- [x] `export()` - standalone sklearn scripts, zero lock-in *(v1.0)*
+- [x] `card()` - auto-generated honest model cards *(v1.0)*
+- [x] Teaching narration (`explain_decisions=True`) *(v1.0)*
+- [x] `deploy()` - one-line FastAPI + Docker serving *(v1.0)*
+- [x] MCP server for AI agents (`breezeml-mcp`) *(v1.0)*
+- [x] CI-enforced dependency contract - 4 core deps, always *(v1.0)*
 - [ ] Additional datasets (Titanic, MNIST subset)
-- [ ] `Pipeline.export()` - export trained pipelines as Python
 - [ ] `BreezeAutoML` - full AutoML via Optuna integration
+- [ ] Time-series helpers (`breezeml.timeseries`)
+- [ ] ONNX export for categorical pipelines
+
+---
+
+## Benchmarks
+
+Measured 2026-07-05, Windows 11, Python 3.11, same machine and venv. Reproduce with `python benchmarks/run_benchmarks.py`.
+
+| | BreezeML | PyCaret | LazyPredict |
+|---|---|---|---|
+| Fresh install | **2m 36s / 274 MB** | 6m 21s / 952 MB | (shared venv) |
+| Cold import | **3.1s** | 6.9s | 7.2s |
+| Wine leaderboard | 9.0s | 19.3s | **3.7s** |
+| Best accuracy | **1.000** | 0.984 | **1.000** |
+| User LOC | **3** | 5 | 8 |
+| Zero lock-in export | **yes** | no | no |
+
+Full methodology and honest caveats: [docs/benchmarks.md](docs/benchmarks.md).
 
 ---
 

@@ -38,6 +38,12 @@ plugins:
 nav:
   - Home: index.md
   - Examples: examples.md
+  - Guides:
+      - Export (no lock-in): guides/export.md
+      - Model Cards & Narration: guides/model-cards.md
+      - Deploy (FastAPI + Docker): guides/deploy.md
+      - MCP Server (AI agents): guides/mcp.md
+  - Benchmarks: benchmarks.md
   - API Reference:
       - Core: api/core.md
       - Classifiers: api/classifiers.md

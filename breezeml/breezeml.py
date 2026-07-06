@@ -9,6 +9,8 @@ import joblib
 
 from ._validation import check_df_target
 from ._preprocessing import _detect_types, _build_preprocessor
+from ._meta import build_meta
+from ._narrate import narrate, format_narration
 from . import regressors
 
 from sklearn.model_selection import train_test_split
@@ -25,10 +27,11 @@ __all__ = [
 
 
 class EasyModel:
-    def __init__(self, pipeline, target, task):
+    def __init__(self, pipeline, target, task, meta=None):
         self.pipeline = pipeline
         self.target = target
         self.task = task
+        self.meta = meta
 
     def predict(self, X):
         return self.pipeline.predict(X)
@@ -40,8 +43,29 @@ class EasyModel:
     def load(path):
         return joblib.load(path)
 
+    def export(self, path="train.py", data_path="YOUR_DATA.csv"):
+        """Export this model as a standalone scikit-learn script (no breezeml imports)."""
+        from .export import export as _export
+        return _export(self, path, data_path=data_path)
 
-def classify(df, target, algo="forest", return_report=True):
+    def card(self, path=None):
+        """Generate a markdown model card. Optionally write it to ``path``."""
+        from .card import card as _card
+        return _card(self, path)
+
+    def deploy(self, out_dir="deployment", name="breezeml-model"):
+        """Write a FastAPI + Docker serving directory for this model."""
+        from .deploy import deploy as _deploy
+        return _deploy(self, out_dir, name)
+
+    def explain_decisions(self):
+        """Print a plain-English explanation of every pipeline decision."""
+        if not self.meta:
+            raise ValueError("No training metadata on this model (train with v0.4+ core API).")
+        print(format_narration(narrate(self.meta)))
+
+
+def classify(df, target, algo="forest", return_report=True, explain_decisions=False):
     check_df_target(df, target)
     X = df.drop(columns=[target])
     y = df[target]
@@ -55,19 +79,29 @@ def classify(df, target, algo="forest", return_report=True):
     X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=stratify, test_size=0.2, random_state=42)
     pipe.fit(X_train, y_train)
 
-    em = EasyModel(pipe, target, "classification")
-
-    if not return_report:
-        return em
     preds = pipe.predict(X_test)
-    report = {
+    eval_report = {
         "accuracy": float(accuracy_score(y_test, preds)),
         "f1": float(f1_score(y_test, preds, average="weighted"))
     }
-    return em, report
+
+    meta = build_meta(
+        df, target, "classification", model,
+        task_reason=_task_reason(y, "classification"),
+        stratified=stratify is not None,
+        report=eval_report,
+    )
+    em = EasyModel(pipe, target, "classification", meta=meta)
+
+    if explain_decisions:
+        print(format_narration(narrate(meta)))
+
+    if not return_report:
+        return em
+    return em, eval_report
 
 
-def regress(df, target, algo="forest", return_report=True):
+def regress(df, target, algo="forest", return_report=True, explain_decisions=False):
     algo_map = {
         "forest": "random_forest",
         "random_forest": "random_forest",
@@ -79,11 +113,36 @@ def regress(df, target, algo="forest", return_report=True):
         raise ValueError(f"Unknown regression algorithm '{algo}'.")
 
     pipe, reg_report = train_fn(df, target)
-    em = EasyModel(pipe, target, "regression")
+    estimator = pipe.named_steps.get("model", pipe.steps[-1][1])
+    meta = build_meta(
+        df, target, "regression", estimator,
+        task_reason=_task_reason(df[target], "regression"),
+        stratified=False,
+        report=reg_report,
+    )
+    em = EasyModel(pipe, target, "regression", meta=meta)
+
+    if explain_decisions:
+        print(format_narration(narrate(meta)))
 
     if not return_report:
         return em
     return em, reg_report
+
+
+def _task_reason(y, task):
+    """Human-readable reason for the detected task type."""
+    if task == "classification":
+        if y.dtype == "object":
+            return f"target '{y.name}' contains text labels, so this is classification."
+        return (
+            f"target '{y.name}' has only {y.nunique()} distinct values "
+            "(fewer than 20), so BreezeML treats it as classification."
+        )
+    return (
+        f"target '{y.name}' is numeric with {y.nunique()} distinct values, "
+        "so BreezeML treats it as regression."
+    )
 
 
 def fit(df, target, task="auto"):
@@ -125,20 +184,20 @@ def load(path):
     return EasyModel.load(path)
 
 
-def auto(df, target, task="auto"):
+def auto(df, target, task="auto", explain_decisions=False):
     """Automatically pick classification or regression based on target."""
     check_df_target(df, target)
     y = df[target]
 
     if task == "classification":
-        return classify(df, target)
+        return classify(df, target, explain_decisions=explain_decisions)
     elif task == "regression":
-        return regress(df, target)
+        return regress(df, target, explain_decisions=explain_decisions)
 
     if y.dtype == "object" or y.nunique() < 20:
-        return classify(df, target)
+        return classify(df, target, explain_decisions=explain_decisions)
     else:
-        return regress(df, target)
+        return regress(df, target, explain_decisions=explain_decisions)
 
 
 def creator():

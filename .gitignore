@@ -43,3 +43,7 @@ htmlcov/
 
 # Docs build
 docs/_build/
+
+# Local experiment artifacts
+logs.log
+models_v18/
