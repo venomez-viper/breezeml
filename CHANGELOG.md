@@ -5,6 +5,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.5.1] - 2026-07-06
+
+### Added
+- **`breezeml.sensei()`**: seek the founder of the dojo, receive one teaching. Reproducible with a seed, as sensei prefers.
+
 ## [1.5.0] - 2026-07-06
 
 ### Added

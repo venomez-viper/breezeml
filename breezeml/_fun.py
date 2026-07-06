@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import random
 
-__all__ = ["zen", "haiku", "fortune"]
+__all__ = ["zen", "haiku", "fortune", "sensei"]
 
 
 _SAKURA = r"""
@@ -108,6 +108,51 @@ def haiku(seed: int | None = None) -> str:
     rng = random.Random(seed)
     first, second, third = rng.choice(_ZEN_HAIKU)
     text = f"{first},\n  {second} -\n    {third}."
+    _speak(text)
+    return text
+
+
+_DOJO = r"""
+              ____________________
+             /                    \
+            /   B R E E Z E M L    \
+           /        D O J O         \
+          '--------------------------'
+              |    |        |    |
+              |    |  ~o~   |    |
+          ____|____|________|____|____
+         (____________________________)
+
+        Sensei Akash Anipakalu Giridhar
+        ~ founder of the BreezeML dojo ~
+"""
+
+_TEACHINGS = [
+    "Four dependencies. Zero excuses.",
+    "A student asked: 'Sensei, my accuracy is perfect.' Sensei replied: 'Then your test set is not.'",
+    "First learn fit. Then learn predict. Then learn why the split matters. This is the way.",
+    "Sensei does not fear the strong model. Sensei fears the unexamined one.",
+    "When you can export the pipeline and walk away, only then have you truly stayed.",
+    "The novice tunes hyperparameters. The master tunes the question.",
+    "A student asked: 'Which model is best?' Sensei pointed at compare() and said nothing.",
+    "Wind cannot be owned, only followed. So too a good default.",
+    "Sensei shipped on Friday once. Once.",
+    "Before deploying, write the model card. Before the model card, understand the caveats. Before the caveats, humility.",
+]
+
+
+def sensei(seed: int | None = None) -> str:
+    """Seek the founder of the dojo. Receive one teaching.
+
+    Parameters
+    ----------
+    seed : int, optional
+        The teaching you receive is the teaching you were meant to receive.
+        Unless you set a seed. Then it is reproducible, as sensei prefers.
+    """
+    rng = random.Random(seed)
+    teaching = rng.choice(_TEACHINGS)
+    text = f"{_DOJO}\n        Sensei says:\n        \"{teaching}\"\n"
     _speak(text)
     return text
 

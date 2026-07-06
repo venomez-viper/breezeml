@@ -739,6 +739,7 @@ import breezeml
 breezeml.zen()      # the Zen of BreezeML: 15 ML haiku, kaze no michi
 breezeml.haiku()    # one haiku, carried in on the breeze
 breezeml.fortune()  # draw an omikuji for your model
+breezeml.sensei()   # seek the founder of the dojo, receive one teaching
 # ~ omikuji ~
 # [Kyou (Misfortune)]
 # Beware: a test set has been touched twice. The numbers now flatter.

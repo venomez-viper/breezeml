@@ -26,6 +26,14 @@ def test_fortune_omikuji(capsys):
     assert breezeml.fortune(seed=42) == text
 
 
+def test_sensei_teaches(capsys):
+    text = breezeml.sensei(seed=1)
+    assert "Sensei Akash Anipakalu Giridhar" in text
+    assert "founder of the BreezeML dojo" in text
+    assert "Sensei says:" in text
+    assert breezeml.sensei(seed=1) == text  # reproducible, as sensei prefers
+
+
 def test_perfect_accuracy_egg(capsys):
     # Wine with default split gives a 1.0 top accuracy -> the egg must fire.
     df = datasets.wine()
