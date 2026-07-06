@@ -74,6 +74,7 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 |---|---|
 | **BreezeAutoML** *(v1.1)* | `automl()` screens every model then tunes the best within a time budget; optional Optuna backend |
 | **Time series** *(v1.2)* | `timeseries.forecast()` and `compare()` with walk-forward CV and a mandatory naive baseline |
+| **Drift monitoring** *(v1.3)* | `drift.check()` + a live `/drift` endpoint in every deployed API; PSI, new categories, range violations |
 | **Zero lock-in export** *(v1.0)* | `export()` writes a standalone sklearn training script with no breezeml imports |
 | **Model cards** *(v1.0)* | `card()` generates honest markdown model cards with auto-detected caveats |
 | **Teaching narration** *(v1.0)* | `explain_decisions=True` explains every pipeline choice in plain English |
@@ -287,6 +288,17 @@ models the same way.
 from breezeml import timeseries
 model, forecast, report = timeseries.forecast(df, "sales", horizon=14, date_col="date")
 print(report["beats_naive"], report["skill_vs_naive"])
+```
+
+#### `drift.check(model, new_df)` *(v1.3)*
+
+Compare new data against the training distributions stored on every core-API
+model: PSI per column, values outside the training range, unseen categories,
+missing-rate spikes. Deployed apps get a live `GET /drift` endpoint for free.
+
+```python
+result = breezeml.drift.check(model, new_df)   # or model.check_drift(new_df)
+print(result["summary"])
 ```
 
 #### `export(model, path, data_path="YOUR_DATA.csv")` *(v1.0)*
@@ -695,6 +707,7 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [ ] Additional datasets (Titanic, MNIST subset)
 - [x] `BreezeAutoML` - budget-aware AutoML with optional Optuna backend *(v1.1)*
 - [x] Time-series helpers (`breezeml.timeseries`) with walk-forward CV and naive-baseline honesty check *(v1.2)*
+- [x] Drift monitoring (`breezeml.drift`) with a live `/drift` endpoint in deployed APIs *(v1.3)*
 - [ ] ONNX export for categorical pipelines
 
 ---

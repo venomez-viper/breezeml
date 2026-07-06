@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.3.0] - 2026-07-06
+
+### Added
+- **Drift monitoring** (`breezeml.drift`): `check(model, new_df)` compares new data against reference distributions captured at training time - PSI over decile bins for numeric columns, unseen-category detection for categoricals, training-range violations, missing-rate spikes, and vanished columns. Also available as `model.check_drift()`.
+- **Live `/drift` endpoint**: `deploy()` now exports `reference.json` and the generated FastAPI app buffers recent predictions to serve a real-time drift report - still with zero breezeml dependency at runtime.
+- **Reference distributions in meta**: core-API models now store compact training distributions (`meta["reference"]`).
+
 ## [1.2.0] - 2026-07-06
 
 ### Added

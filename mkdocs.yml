@@ -41,6 +41,7 @@ nav:
   - Guides:
       - AutoML (budget search): guides/automl.md
       - Time Series (forecasting): guides/timeseries.md
+      - Drift Monitoring: guides/drift.md
       - Export (no lock-in): guides/export.md
       - Model Cards & Narration: guides/model-cards.md
       - Deploy (FastAPI + Docker): guides/deploy.md

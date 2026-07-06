@@ -74,6 +74,48 @@ def profile_data(df: pd.DataFrame, target: str) -> dict:
     }
 
 
+def reference_stats(df: pd.DataFrame, target: str) -> dict:
+    """Compact reference distributions captured at training time.
+
+    Used by ``breezeml.drift`` to detect data drift at prediction time:
+    decile bin edges + proportions for numeric columns, category
+    proportions for categorical columns, and per-column missing rates.
+    """
+    X = df.drop(columns=[target])
+    numeric = X.select_dtypes(include=[np.number]).columns
+    categorical = X.select_dtypes(exclude=[np.number]).columns
+
+    ref_numeric = {}
+    for col in numeric:
+        series = X[col].dropna()
+        if len(series) < 10 or series.nunique() < 2:
+            continue
+        edges = np.unique(np.quantile(series, np.linspace(0, 1, 11)))
+        if len(edges) < 3:
+            continue
+        counts, _ = np.histogram(series, bins=edges)
+        props = counts / counts.sum()
+        ref_numeric[col] = {
+            "bin_edges": [float(e) for e in edges],
+            "bin_props": [float(p) for p in props],
+        }
+
+    ref_categorical = {}
+    for col in categorical:
+        props = X[col].dropna().astype(str).value_counts(normalize=True)
+        top = props.head(20)
+        ref_categorical[col] = {str(k): float(v) for k, v in top.items()}
+
+    missing_rates = {col: float(X[col].isna().mean()) for col in X.columns}
+
+    return {
+        "numeric": ref_numeric,
+        "categorical": ref_categorical,
+        "missing_rates": missing_rates,
+        "n_rows": int(len(X)),
+    }
+
+
 def build_meta(
     df: pd.DataFrame,
     target: str,
@@ -91,6 +133,7 @@ def build_meta(
 
     meta = {
         "profile": profile_data(df, target),
+        "reference": reference_stats(df, target),
         "task": task,
         "task_reason": task_reason,
         "estimator": type(estimator).__name__,

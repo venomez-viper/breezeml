@@ -59,6 +59,11 @@ class EasyModel:
         from .deploy import deploy as _deploy
         return _deploy(self, out_dir, name)
 
+    def check_drift(self, new_df, threshold=0.25):
+        """Compare new data against this model's training distributions."""
+        from .drift import check as _check
+        return _check(self, new_df, threshold=threshold)
+
     def explain_decisions(self):
         """Print a plain-English explanation of every pipeline decision."""
         if not self.meta:
