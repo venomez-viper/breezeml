@@ -5,6 +5,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.1.0] - 2026-07-06
+
+### Added
+- **BreezeAutoML**: `breezeml.automl(df, target, time_budget=60)` screens every built-in model with cross-validation, tunes the top 3 with budget-sized `RandomizedSearchCV`, and reports honest holdout metrics from a fresh stratified split. Search history stored in `model.meta["automl"]`; `card()`, `export()`, `deploy()`, and narration all work on the result.
+- **Optuna backend**: `backend="optuna"` switches tuning to TPE search. New `[automl]` extra.
+
+### Changed
+- Version bump to 1.1.0; `automl` added to the public API.
+
 ## [1.0.1] - 2026-07-05
 
 ### Changed

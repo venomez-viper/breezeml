@@ -39,6 +39,7 @@ nav:
   - Home: index.md
   - Examples: examples.md
   - Guides:
+      - AutoML (budget search): guides/automl.md
       - Export (no lock-in): guides/export.md
       - Model Cards & Narration: guides/model-cards.md
       - Deploy (FastAPI + Docker): guides/deploy.md

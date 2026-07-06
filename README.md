@@ -72,6 +72,7 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 
 | Feature | Description |
 |---|---|
+| **BreezeAutoML** *(v1.1)* | `automl()` screens every model then tunes the best within a time budget; optional Optuna backend |
 | **Zero lock-in export** *(v1.0)* | `export()` writes a standalone sklearn training script with no breezeml imports |
 | **Model cards** *(v1.0)* | `card()` generates honest markdown model cards with auto-detected caveats |
 | **Teaching narration** *(v1.0)* | `explain_decisions=True` explains every pipeline choice in plain English |
@@ -261,6 +262,18 @@ Persist and restore any trained `EasyModel`.
 ```python
 save(model, "my_model.joblib")
 model = load("my_model.joblib")
+```
+
+#### `automl(df, target, time_budget=60)` *(v1.1)*
+
+Budget-aware automated model selection: screens every built-in model with
+cross-validation, tunes the top candidates with the remaining time, and
+reports honest holdout metrics. `backend="optuna"` switches to TPE search
+(`pip install breezeml[automl]`).
+
+```python
+model, report = breezeml.automl(df, "churn", time_budget=120)
+print(report["best_model"], report["holdout"])
 ```
 
 #### `export(model, path, data_path="YOUR_DATA.csv")` *(v1.0)*
@@ -667,7 +680,7 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] MCP server for AI agents (`breezeml-mcp`) *(v1.0)*
 - [x] CI-enforced dependency contract - 4 core deps, always *(v1.0)*
 - [ ] Additional datasets (Titanic, MNIST subset)
-- [ ] `BreezeAutoML` - full AutoML via Optuna integration
+- [x] `BreezeAutoML` - budget-aware AutoML with optional Optuna backend *(v1.1)*
 - [ ] Time-series helpers (`breezeml.timeseries`)
 - [ ] ONNX export for categorical pipelines
 

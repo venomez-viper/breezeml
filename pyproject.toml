@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "breezeml"
-version = "1.0.1"
+version = "1.1.0"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akashagakash@gmail.com" }
 ]
@@ -36,13 +36,14 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-cov", "ruff", "mkdocs-material", "mkdocstrings[python]", "fastapi>=0.100", "httpx", "mcp>=1.0; python_version >= '3.10'"]
+dev = ["pytest>=7.0", "pytest-cov", "ruff", "mkdocs-material", "mkdocstrings[python]", "fastapi>=0.100", "httpx", "mcp>=1.0; python_version >= '3.10'", "optuna>=3.0"]
 nlp = ["sentence-transformers"]
 explain = ["shap", "matplotlib"]
 plot = ["matplotlib"]
 boost = ["xgboost", "lightgbm"]
 datasets = ["seaborn"]
 deploy = ["fastapi>=0.100", "uvicorn>=0.23"]
+automl = ["optuna>=3.0"]
 onnx = ["skl2onnx", "onnx"]
 mcp = ["mcp>=1.0"]
 all = ["sentence-transformers", "shap", "matplotlib", "xgboost", "lightgbm", "seaborn", "fastapi>=0.100", "uvicorn>=0.23"]

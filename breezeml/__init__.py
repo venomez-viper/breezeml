@@ -4,13 +4,14 @@ students, analysts, and AI agents. Train, compare, explain, export, and
 deploy scikit-learn models without drowning in boilerplate.
 """
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 __author__ = "Akash Anipakalu Giridhar"
 
 from .breezeml import auto, classify, creator, datasets, fit, from_csv, load, predict, regress, report, save
 from .export import export
 from .card import card
 from .deploy import deploy
+from .automl import automl
 from . import classifiers, clustering, explain, features, plot, regressors, text
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "export",
     "card",
     "deploy",
+    "automl",
     "classifiers",
     "clustering",
     "regressors",
