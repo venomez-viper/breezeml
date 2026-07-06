@@ -73,6 +73,7 @@ breezeml.deploy(model, "api/")            # FastAPI app + Dockerfile, ready to r
 | Feature | Description |
 |---|---|
 | **BreezeAutoML** *(v1.1)* | `automl()` screens every model then tunes the best within a time budget; optional Optuna backend |
+| **Time series** *(v1.2)* | `timeseries.forecast()` and `compare()` with walk-forward CV and a mandatory naive baseline |
 | **Zero lock-in export** *(v1.0)* | `export()` writes a standalone sklearn training script with no breezeml imports |
 | **Model cards** *(v1.0)* | `card()` generates honest markdown model cards with auto-detected caveats |
 | **Teaching narration** *(v1.0)* | `explain_decisions=True` explains every pipeline choice in plain English |
@@ -274,6 +275,18 @@ reports honest holdout metrics. `backend="optuna"` switches to TPE search
 ```python
 model, report = breezeml.automl(df, "churn", time_budget=120)
 print(report["best_model"], report["holdout"])
+```
+
+#### `timeseries.forecast(df, target, horizon, date_col)` *(v1.2)*
+
+Univariate forecasting with lag/rolling features, walk-forward validation,
+and a mandatory naive-baseline comparison. `timeseries.compare()` ranks all
+models the same way.
+
+```python
+from breezeml import timeseries
+model, forecast, report = timeseries.forecast(df, "sales", horizon=14, date_col="date")
+print(report["beats_naive"], report["skill_vs_naive"])
 ```
 
 #### `export(model, path, data_path="YOUR_DATA.csv")` *(v1.0)*
@@ -681,7 +694,7 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] CI-enforced dependency contract - 4 core deps, always *(v1.0)*
 - [ ] Additional datasets (Titanic, MNIST subset)
 - [x] `BreezeAutoML` - budget-aware AutoML with optional Optuna backend *(v1.1)*
-- [ ] Time-series helpers (`breezeml.timeseries`)
+- [x] Time-series helpers (`breezeml.timeseries`) with walk-forward CV and naive-baseline honesty check *(v1.2)*
 - [ ] ONNX export for categorical pipelines
 
 ---

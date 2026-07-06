@@ -5,6 +5,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.2.0] - 2026-07-06
+
+### Added
+- **Time series module** (`breezeml.timeseries`): `make_features()` (leakage-free lag/rolling/calendar features), `compare()` (walk-forward leaderboard with a mandatory naive last-value baseline), and `forecast()` (recursive multi-step forecasting with `beats_naive` / `skill_vs_naive` honesty metrics). Runs on the 4 core dependencies; XGBoost/LightGBM join automatically when installed.
+
 ## [1.1.0] - 2026-07-06
 
 ### Added
