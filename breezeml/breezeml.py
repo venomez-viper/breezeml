@@ -1,8 +1,9 @@
 """
-BreezeML: Beginner-friendly wrapper around scikit-learn
+BreezeML: a beginner-friendly, production-aware ML workflow layer for
+students, analysts, and AI agents. Train, compare, explain, export, and
+deploy scikit-learn models without drowning in boilerplate.
 
 Created by Akash Anipakalu Giridhar
-v0.3.0
 """
 import pandas as pd
 import joblib

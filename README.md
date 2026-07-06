@@ -4,9 +4,9 @@
 
 # BreezeML
 
-**Machine learning without the boilerplate.**
+**A beginner-friendly, production-aware ML workflow layer for students, analysts, and AI agents.**
 
-*Train, evaluate, compare, and save models in a few lines.*
+*Train, compare, explain, export, and deploy scikit-learn models without drowning in boilerplate.*
 
 <br/>
 
@@ -31,7 +31,7 @@
 
 ## Overview
 
-BreezeML is a high-level machine learning library built on top of **scikit-learn**, designed to remove boilerplate while keeping the underlying workflow statistically sound. It handles preprocessing, train/test splits, model comparison, tuning, evaluation, deployment, and persistence behind a compact API that stays readable for both beginners and working practitioners.
+BreezeML is a **beginner-friendly, production-aware ML workflow layer** for students, analysts, and AI agents. It helps you train, compare, explain, export, and deploy **scikit-learn** models without drowning in boilerplate, while keeping the underlying workflow statistically sound: leakage-safe preprocessing, stratified splits, honest metrics, and reproducible seeds by default.
 
 ```python
 from breezeml import datasets, fit, predict

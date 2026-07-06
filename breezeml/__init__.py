@@ -1,5 +1,7 @@
 """
-BreezeML public API.
+BreezeML: a beginner-friendly, production-aware ML workflow layer for
+students, analysts, and AI agents. Train, compare, explain, export, and
+deploy scikit-learn models without drowning in boilerplate.
 """
 
 __version__ = "1.0.0"

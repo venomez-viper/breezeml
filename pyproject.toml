@@ -8,7 +8,7 @@ version = "1.0.0"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akashagakash@gmail.com" }
 ]
-description = "BreezeML — Production-grade machine learning with zero boilerplate, built on scikit-learn."
+description = "A beginner-friendly, production-aware ML workflow layer for students, analysts, and AI agents: train, compare, explain, export, and deploy scikit-learn models without the boilerplate."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
