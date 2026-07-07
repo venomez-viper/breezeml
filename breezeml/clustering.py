@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN, Birch, SpectralClustering
+from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN, Birch, MeanShift, OPTICS, SpectralClustering
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 
@@ -105,5 +105,47 @@ def spectral(df: pd.DataFrame, n_clusters: int = 3, random_state: int = 42):
     return {
         "model": model,
         "labels": labels,
+        "silhouette": _silhouette_safe(X, labels)
+    }
+
+
+def meanshift(df: pd.DataFrame, bandwidth: float | None = None):
+    """Finds the number of clusters itself by seeking density peaks."""
+    X = _prep_numeric(df)
+    model = MeanShift(bandwidth=bandwidth)
+    labels = model.fit_predict(X)
+    return {
+        "model": model,
+        "labels": labels,
+        "n_clusters_found": int(len(set(labels))),
+        "silhouette": _silhouette_safe(X, labels)
+    }
+
+
+def optics(df: pd.DataFrame, min_samples: int = 5):
+    """DBSCAN's flexible sibling: handles clusters of varying density."""
+    X = _prep_numeric(df)
+    model = OPTICS(min_samples=min_samples)
+    labels = model.fit_predict(X)
+    return {
+        "model": model,
+        "labels": labels,
+        "silhouette": _silhouette_safe(X, labels)
+    }
+
+
+def hdbscan(df: pd.DataFrame, min_cluster_size: int = 5):
+    """Hierarchical DBSCAN (sklearn >= 1.3): robust density clustering with noise labels."""
+    try:
+        from sklearn.cluster import HDBSCAN
+    except ImportError as exc:
+        raise ImportError("hdbscan requires scikit-learn >= 1.3.") from exc
+    X = _prep_numeric(df)
+    model = HDBSCAN(min_cluster_size=min_cluster_size)
+    labels = model.fit_predict(X)
+    return {
+        "model": model,
+        "labels": labels,
+        "n_noise": int((labels == -1).sum()),
         "silhouette": _silhouette_safe(X, labels)
     }

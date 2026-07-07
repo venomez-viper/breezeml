@@ -62,6 +62,17 @@ def tool_inspect_data(csv_path: str, target: str) -> str:
     return json.dumps(profile, indent=2)
 
 
+def tool_audit(csv_path: str, target: str) -> str:
+    """Audit a CSV for data-quality problems and target leakage before
+    training: ID columns, constants, duplicates, label noise, and features
+    that predict the target suspiciously well on their own."""
+    from .audit import audit
+
+    df = _load_df(csv_path)
+    result = audit(df, target, show=False)
+    return json.dumps(result, indent=2, default=str)
+
+
 def tool_train(csv_path: str, target: str, task: str = "auto") -> str:
     """Train a model on a CSV. Returns model_id, metrics, and an explanation
     of every pipeline decision."""
@@ -175,6 +186,7 @@ def build_server():
         ),
     )
     server.tool(name="inspect_data")(tool_inspect_data)
+    server.tool(name="audit")(tool_audit)
     server.tool(name="train")(tool_train)
     server.tool(name="compare")(tool_compare)
     server.tool(name="predict")(tool_predict)

@@ -47,6 +47,8 @@ nav:
       - Model Cards & Narration: guides/model-cards.md
       - Deploy (FastAPI + Docker): guides/deploy.md
       - MCP Server (AI agents): guides/mcp.md
+      - Honest ML (audit, fairness, imbalance, blend): guides/honest-ml.md
+      - Toolkits (track, anomaly, semi-supervised, CLI): guides/toolkits.md
   - Benchmarks: benchmarks.md
   - API Reference:
       - Core: api/core.md

@@ -90,7 +90,7 @@ is all you need, stop here. You are done.
 
 ```python
 model, report = breezeml.auto(df, "target", explain_decisions=True)  # narrates every choice
-breezeml.classifiers.compare(df, "target")   # leaderboard of 18 models
+breezeml.classifiers.compare(df, "target")   # leaderboard of 22 models
 breezeml.card(model, "MODEL_CARD.md")        # honest model card
 ```
 
@@ -116,6 +116,15 @@ need it.
 
 | Feature | Description |
 |---|---|
+| **Data audit + leakage detection** *(v1.7)* | `audit()` flags ID columns, duplicates, label noise, and single-feature target leakage; `contamination()` checks train/test overlap |
+| **Fairness reports** *(v1.7)* | `fairness.report()` gives per-group metrics, demographic parity ratio, a four-fifths rule verdict, and TPR/FPR gaps |
+| **Imbalance toolkit** *(v1.7)* | `balanced=True` training plus `tune_threshold()`, `calibrate()`, and `cost_report()` on the core dependencies |
+| **Model blending** *(v1.7)* | `blend()` ensembles the `compare()` winners (vote or stack) and reports honestly whether it beats the best single model |
+| **Experiment tracking** *(v1.7)* | `track.log()` / `leaderboard()` / `best()` in a plain `.breezeml/runs.json`; zero extra dependencies |
+| **Anomaly detection** *(v1.7)* | 4 detectors plus `anomaly.compare()` with majority/unanimous consensus across them |
+| **Semi-supervised learning** *(v1.7)* | `semisupervised.self_train()` learns from NaN-target rows and always reports the supervised baseline |
+| **Command line interface** *(v1.7)* | `breezeml train/compare/automl/audit/deploy/card/zen/guide` straight from the terminal |
+| **Native explainability** *(v1.7)* | `explain.permutation_importance()` and `explain.partial_dependence()` on core dependencies; no SHAP needed |
 | **BreezeAutoML** *(v1.1)* | `automl()` screens every model then tunes the best within a time budget; optional Optuna backend |
 | **Time series** *(v1.2)* | `timeseries.forecast()` and `compare()` with walk-forward CV and a mandatory naive baseline |
 | **Drift monitoring** *(v1.3)* | `drift.check()` + a live `/drift` endpoint in every deployed API; PSI, new categories, range violations |
@@ -128,8 +137,9 @@ need it.
 | **MCP server for AI agents** *(v1.0)* | `breezeml-mcp` lets Claude & other agents train/compare/explain/deploy models |
 | **Dependency contract** *(v1.0)* | Core needs only sklearn, pandas, numpy, joblib, enforced by CI, forever |
 | **Auto task detection** | Automatically selects classification or regression based on the target column |
-| **18 classifiers** *(v1.4)* | From Logistic Regression to Hist Gradient Boosting, LDA/QDA, and Neural Nets |
-| **16 regressors** *(v1.4)* | From Linear Regression to Hist Gradient Boosting, Huber, and MLP |
+| **22 classifiers** *(v1.7)* | From Logistic Regression to Hist Gradient Boosting, LDA/QDA, Neural Nets, and Bagging |
+| **22 regressors** *(v1.7)* | From Linear Regression to Hist Gradient Boosting, Huber, Poisson, quantile, and robust fits |
+| **9 clusterers** *(v1.7)* | K-Means to HDBSCAN, OPTICS, and Mean Shift, all with silhouette reporting |
 | **Classifier leaderboard** | `classifiers.compare()` ranks all built-in classifiers by accuracy and F1 |
 | **Regressor leaderboard** *(v0.3.0)* | `regressors.compare()` ranks all built-in regressors by R2, MAE, and RMSE |
 | **Cross-validation support** *(v0.3.0)* | Most classifier and regressor training helpers now accept `cv=` and return mean/std metrics |
@@ -165,14 +175,14 @@ approachable at the top, hackable underneath, honest everywhere.
 ```text
 breezeml/
 |-- breezeml.py        # Breath 1: fit, predict, auto, from_csv, save, load
-|-- classifiers.py     # Breath 2: 18 classifiers + compare, detailed_report, quick_tune
-|-- regressors.py      # Breath 2: 16 regressors + compare, detailed_report, quick_tune
+|-- classifiers.py     # Breath 2: 22 classifiers + compare, detailed_report, quick_tune
+|-- regressors.py      # Breath 2: 22 regressors + compare, detailed_report, quick_tune
 |-- automl.py          # Breath 3: budget-aware model search
 |-- export.py          # Breath 3: zero lock-in sklearn codegen
 |-- deploy.py          # Breath 3: FastAPI + Docker serving
 |-- drift.py           # Breath 3: PSI drift detection
 |-- timeseries.py      # Breath 3: forecasting with honesty checks
-|-- clustering.py      # Breath 4: 6 clustering algorithms
+|-- clustering.py      # Breath 4: 9 clustering algorithms
 |-- features.py        # Breath 4: selection, importances, PCA, polynomial
 |-- text.py            # Breath 4: semantic text embeddings
 |-- explain.py         # Breath 4: SHAP explainability
@@ -367,6 +377,33 @@ result = breezeml.drift.check(model, new_df)   # or model.check_drift(new_df)
 print(result["summary"])
 ```
 
+#### `audit(df, target)` *(v1.7)*
+
+Pre-training data audit: ID-like columns, constants, duplicate rows,
+contradictory labels, high-cardinality categoricals, heavy missingness,
+class imbalance, and single-feature target-leakage probes (a tiny tree
+trained on one feature at a time; near-perfect scores flag a leak).
+Returns findings with severities and an overall `ok` flag.
+`contamination(train_df, test_df)` detects rows shared across a split.
+
+```python
+result = breezeml.audit(df, "churn")
+print(result["ok"], result["summary"])
+breezeml.contamination(train_df, test_df)
+```
+
+#### `blend(df, target, method="vote")` *(v1.7)*
+
+Ensemble the top `compare()` models by soft voting (`"vote"`) or stacking
+(`"stack"`). The report always carries `beats_best_single`; when the blend
+loses to the best single model, BreezeML says to keep the single model.
+The result is a normal `EasyModel`: `save()`, `card()`, and `deploy()` work.
+
+```python
+model, report = breezeml.blend(df, "target", method="stack")
+print(report["blend_score"], report["best_single_score"], report["beats_best_single"])
+```
+
 #### `export(model, path, data_path="YOUR_DATA.csv")` *(v1.0)*
 
 Write a standalone scikit-learn training script that reproduces the exact
@@ -424,6 +461,25 @@ Tools: `inspect_data`, `compare`, `train`, `predict`, `explain`, `model_card`, `
 
 ---
 
+### Command Line Interface *(v1.7)*
+
+Installing breezeml puts a `breezeml` command on your PATH:
+
+```bash
+breezeml train data.csv --target churn        # auto model -> model.joblib (--explain narrates)
+breezeml compare data.csv --target churn      # leaderboard of all built-in models
+breezeml automl data.csv --target churn --budget 120
+breezeml audit data.csv --target churn        # data quality + leakage; exits 1 on critical findings
+breezeml deploy model.joblib --out api/       # FastAPI + Docker serving directory
+breezeml card model.joblib --out MODEL_CARD.md
+breezeml zen                                  # the Zen of BreezeML
+breezeml guide                                # the garden path map
+```
+
+The `audit` exit code makes it a natural CI gate before a scheduled retrain.
+
+---
+
 ### `classifiers` Module
 
 All classifier functions share the same signature:
@@ -460,6 +516,10 @@ The standard report includes:
 | `classifiers.lda` *(v1.4)* | Linear Discriminant Analysis | Classic, strong on small data |
 | `classifiers.qda` *(v1.4)* | Quadratic Discriminant Analysis | Curved class boundaries |
 | `classifiers.complement_nb` *(v1.4)* | Complement Naive Bayes | Best NB variant for imbalanced text |
+| `classifiers.bernoulli_nb` *(v1.7)* | Bernoulli Naive Bayes | For binary/boolean features |
+| `classifiers.passive_aggressive` *(v1.7)* | Passive Aggressive | Online linear learner, scales to large data |
+| `classifiers.nearest_centroid` *(v1.7)* | Nearest Centroid | One centroid per class; the simplest baseline |
+| `classifiers.bagging` *(v1.7)* | Bagging | Bootstrap-aggregated trees |
 
 #### `classifiers.compare(df, target)`
 
@@ -544,6 +604,12 @@ The standard regression report includes:
 | `regressors.huber` *(v1.4)* | Huber Regressor | Robust to outliers |
 | `regressors.bayesian_ridge` *(v1.4)* | Bayesian Ridge | Uncertainty-aware linear model |
 | `regressors.sgd` *(v1.4)* | SGD Regressor | Scales to very large datasets |
+| `regressors.poisson` *(v1.7)* | Poisson GLM | Count targets (visits, orders, defects) |
+| `regressors.quantile` *(v1.7)* | Quantile Regressor | Predict a quantile instead of the mean (`q=0.9` for conservative planning) |
+| `regressors.theilsen` *(v1.7)* | Theil-Sen | Robust line fitting, immune to ~29% outliers |
+| `regressors.ransac` *(v1.7)* | RANSAC | Fits on inlier consensus; shrugs off gross outliers |
+| `regressors.kernel_ridge` *(v1.7)* | Kernel Ridge (RBF) | Nonlinear ridge regression |
+| `regressors.bagging` *(v1.7)* | Bagging Regressor | Bootstrap-aggregated trees |
 
 #### `regressors.compare(df, target)`
 
@@ -709,6 +775,9 @@ print(res["labels"][:10])
 | `clustering.gaussian_mixture(df, n_clusters)` *(v1.4)* | Gaussian Mixture (soft clustering + BIC) |
 | `clustering.birch(df, n_clusters)` *(v1.4)* | Birch (memory-efficient, large data) |
 | `clustering.spectral(df, n_clusters)` *(v1.4)* | Spectral (non-convex cluster shapes) |
+| `clustering.meanshift(df, bandwidth)` *(v1.7)* | Mean Shift (finds the number of clusters itself) |
+| `clustering.optics(df, min_samples)` *(v1.7)* | OPTICS (clusters of varying density) |
+| `clustering.hdbscan(df, min_cluster_size)` *(v1.7)* | HDBSCAN (sklearn >= 1.3; noise-aware density clustering) |
 
 ---
 
@@ -761,8 +830,8 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 ## Roadmap
 
 - [x] Core `fit` / `predict` / `auto` API
-- [x] 18 classifiers with unified interface (6 added in v1.4)
-- [x] 16 regressors with leaderboard, detailed reports, and tuning (6 added in v1.4)
+- [x] 22 classifiers with unified interface (6 added in v1.4, 4 in v1.7)
+- [x] 22 regressors with leaderboard, detailed reports, and tuning (6 added in v1.4, 6 in v1.7)
 - [x] Classifier leaderboard (`compare`)
 - [x] Regressor leaderboard (`regressors.compare`) *(v0.3.0)*
 - [x] Cross-validation support across classifiers and regressors *(v0.3.0)*
@@ -772,7 +841,7 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] Detailed regression reports (`adjusted_r2`, `mape`, residuals) *(v0.3.0)*
 - [x] Feature engineering helpers (`select`, `importance`, `pca`, `polynomial`) *(v0.3.0)*
 - [x] Optional XGBoost and LightGBM integration *(v0.3.0)*
-- [x] Clustering (K-Means, DBSCAN, Agglomerative)
+- [x] Clustering (9 algorithms, K-Means to HDBSCAN) *(3 added in v1.7)*
 - [x] Cascade classification - hierarchical multi-level pipelines *(v0.2.6)*
 - [x] External test set support (`X_test` / `y_test`) on all classifiers *(v0.2.6)*
 - [x] Macro F1 in all report dicts *(v0.2.6)*
@@ -789,6 +858,15 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] `BreezeAutoML` - budget-aware AutoML with optional Optuna backend *(v1.1)*
 - [x] Time-series helpers (`breezeml.timeseries`) with walk-forward CV and naive-baseline honesty check *(v1.2)*
 - [x] Drift monitoring (`breezeml.drift`) with a live `/drift` endpoint in deployed APIs *(v1.3)*
+- [x] Data audit + target-leakage detection (`breezeml.audit`) *(v1.7)*
+- [x] Fairness reports (`breezeml.fairness`) *(v1.7)*
+- [x] Imbalance toolkit (thresholds, calibration, cost-aware decisions) *(v1.7)*
+- [x] Model blending (`breezeml.blend`, vote and stack) *(v1.7)*
+- [x] Zero-dependency experiment tracking (`breezeml.track`) *(v1.7)*
+- [x] Anomaly detection with detector consensus (`breezeml.anomaly`) *(v1.7)*
+- [x] Semi-supervised self-training (`breezeml.semisupervised`) *(v1.7)*
+- [x] Command line interface (`breezeml train/compare/automl/audit/...`) *(v1.7)*
+- [x] Native explainability without SHAP (permutation importance, partial dependence) *(v1.7)*
 - [ ] ONNX export for categorical pipelines
 
 ---

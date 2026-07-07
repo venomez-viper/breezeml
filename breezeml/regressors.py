@@ -9,19 +9,25 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import (
     AdaBoostRegressor,
+    BaggingRegressor,
     ExtraTreesRegressor,
     GradientBoostingRegressor,
     HistGradientBoostingRegressor,
     RandomForestRegressor,
 )
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import (
     BayesianRidge,
     ElasticNet,
     HuberRegressor,
     Lasso,
     LinearRegression,
+    PoissonRegressor,
+    QuantileRegressor,
+    RANSACRegressor,
     Ridge,
     SGDRegressor,
+    TheilSenRegressor,
 )
 from sklearn.metrics import (
     explained_variance_score,
@@ -413,6 +419,34 @@ def sgd(df: pd.DataFrame = None, target: str = None, alpha: float = 1e-4, max_it
     return _train(SGDRegressor(alpha=alpha, max_iter=max_iter, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
 
 
+def poisson(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, max_iter: int = 300, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    """For count targets (visits, orders, defects): a proper Poisson GLM."""
+    return _train(PoissonRegressor(alpha=alpha, max_iter=max_iter), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def quantile(df: pd.DataFrame = None, target: str = None, q: float = 0.5, alpha: float = 0.0, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    """Predict a quantile instead of the mean (q=0.9 for conservative planning)."""
+    return _train(QuantileRegressor(quantile=q, alpha=alpha, solver="highs"), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def theilsen(df: pd.DataFrame = None, target: str = None, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    """Robust line fitting: immune to up to ~29% outliers."""
+    return _train(TheilSenRegressor(random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def ransac(df: pd.DataFrame = None, target: str = None, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    """Fits on inlier consensus; shrugs off gross outliers entirely."""
+    return _train(RANSACRegressor(random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def kernel_ridge(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, kernel: str = "rbf", *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(KernelRidge(alpha=alpha, kernel=kernel), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def bagging(df: pd.DataFrame = None, target: str = None, n_estimators: int = 50, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(BaggingRegressor(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
 def _base_regressor_factories():
     return {
         "Linear Regression": lambda: LinearRegression(),
@@ -431,6 +465,10 @@ def _base_regressor_factories():
         "Huber": lambda: HuberRegressor(max_iter=500),
         "Bayesian Ridge": lambda: BayesianRidge(),
         "SGD (linear)": lambda: SGDRegressor(max_iter=1000, random_state=42),
+        "Poisson GLM": lambda: PoissonRegressor(max_iter=300),
+        "Theil-Sen (robust)": lambda: TheilSenRegressor(random_state=42),
+        "Kernel Ridge": lambda: KernelRidge(kernel="rbf"),
+        "Bagging": lambda: BaggingRegressor(n_estimators=50, random_state=42),
     }
 
 
@@ -516,6 +554,12 @@ def _algo_factories():
         "huber": lambda: HuberRegressor(max_iter=500),
         "bayesian_ridge": lambda: BayesianRidge(),
         "sgd": lambda: SGDRegressor(max_iter=1000, random_state=42),
+        "poisson": lambda: PoissonRegressor(max_iter=300),
+        "quantile": lambda: QuantileRegressor(solver="highs"),
+        "theilsen": lambda: TheilSenRegressor(random_state=42),
+        "ransac": lambda: RANSACRegressor(random_state=42),
+        "kernel_ridge": lambda: KernelRidge(kernel="rbf"),
+        "bagging": lambda: BaggingRegressor(n_estimators=50, random_state=42),
     }
     try:
         _load_xgb_regressor()

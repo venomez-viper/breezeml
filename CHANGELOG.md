@@ -5,6 +5,29 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.7.0] - 2026-07-07
+
+The Honest Machine: tools that tell you when your data is lying, when your model treats groups unequally, and when extra complexity did not earn its keep.
+
+### Added
+- **Data audit** (`breezeml.audit`): `audit(df, target)` checks for ID-like columns, constant columns, duplicate rows, contradictory labels, high-cardinality categoricals, heavy missingness, class imbalance, and target leakage - probed by training a tiny depth-3 tree on each feature alone; a near-perfect single-feature score flags a leak. Critical findings flip the `ok` flag. `audit.contamination(train_df, test_df)` detects rows shared across a train/test split.
+- **Fairness reports** (`breezeml.fairness`): `report(model, df, sensitive=...)` gives per-group size, accuracy, F1, selection rate, TPR, and FPR, plus the demographic parity ratio, a four-fifths (80%) rule verdict, and TPR/FPR gaps; per-group MAE and mean error for regression. Small groups are called out as noise, not evidence.
+- **Imbalance toolkit** (`breezeml.imbalance`): `summary()` (severity verdict), `tune_threshold()` (best minority-F1 threshold on a held-out split), `calibrate()` (isotonic/sigmoid with before/after Brier scores), `cost_report()` (the threshold that minimizes your FP/FN costs), and `predict_with_threshold()`. Plus `balanced=True` on `classify()` / `auto()` for class-weighted training. Core dependencies only; no SMOTE clones.
+- **Model blending** (`breezeml.blend`): `blend(df, target, method="vote"|"stack")` ensembles the top `compare()` models by soft voting or stacking, and always reports `beats_best_single`; when the blend loses, it says to keep the single model.
+- **Experiment tracking** (`breezeml.track`): `log()`, `leaderboard()`, `best()`, and `clear()` on a plain, git-committable `.breezeml/runs.json`. Zero extra dependencies, no server, no account.
+- **Anomaly detection** (`breezeml.anomaly`): `isolation_forest`, `local_outlier_factor`, `one_class_svm`, and `elliptic_envelope`, plus `compare()` reporting majority and unanimous consensus across detectors - because unsupervised detection has no accuracy score, agreement is the evidence.
+- **Semi-supervised learning** (`breezeml.semisupervised`): `self_train(df, target)` treats NaN targets as the unlabeled pool, pseudo-labels confident rows, and always reports the supervised-only baseline plus a `helped` verdict, so you know whether the unlabeled data earned anything.
+- **Native explainability** (`breezeml.explain`): `permutation_importance()` and `partial_dependence()` run on the core dependencies; no SHAP install needed.
+- **Command line interface** (`breezeml.cli`): `breezeml train / compare / automl / audit / deploy / card / zen / guide` from the terminal. `breezeml audit` exits 1 on critical findings, making it a natural CI gate.
+- **Model zoo wave 2**: 4 new classifiers (`bernoulli_nb`, `passive_aggressive`, `nearest_centroid`, `bagging` - 22 total), 6 new regressors (`poisson`, `quantile`, `theilsen`, `ransac`, `kernel_ridge`, `bagging` - 22 total), and 3 new clusterers (`meanshift`, `optics`, `hdbscan` - 9 total).
+- **Docs**: new guides for the honest-ML toolkit (`docs/guides/honest-ml.md`) and the v1.7 toolkits (`docs/guides/toolkits.md`).
+
+### Community
+- **First external PR merged**: `plot.pr_curve()` (precision-recall curve plotting) contributed by @its-Sohan.
+
+### Changed
+- **Dev extra**: `matplotlib` added to the `[dev]` extra.
+
 ## [1.6.0] - 2026-07-06
 
 ### Added

@@ -71,14 +71,19 @@ class EasyModel:
         print(format_narration(narrate(self.meta)))
 
 
-def classify(df, target, algo="forest", return_report=True, explain_decisions=False):
+def classify(df, target, algo="forest", return_report=True, explain_decisions=False, balanced=False):
     check_df_target(df, target)
     X = df.drop(columns=[target])
     y = df[target]
     numeric, categorical = _detect_types(df, target)
     pre = _build_preprocessor(numeric, categorical)
 
-    model = RandomForestClassifier(random_state=42) if algo == "forest" else LogisticRegression(max_iter=200)
+    class_weight = "balanced" if balanced else None
+    model = (
+        RandomForestClassifier(random_state=42, class_weight=class_weight)
+        if algo == "forest"
+        else LogisticRegression(max_iter=200, class_weight=class_weight)
+    )
     pipe = Pipeline([("pre", pre), ("model", model)])
 
     stratify = y if (y.nunique() > 1 and y.nunique() < len(y)) else None
@@ -190,18 +195,18 @@ def load(path):
     return EasyModel.load(path)
 
 
-def auto(df, target, task="auto", explain_decisions=False):
+def auto(df, target, task="auto", explain_decisions=False, balanced=False):
     """Automatically pick classification or regression based on target."""
     check_df_target(df, target)
     y = df[target]
 
     if task == "classification":
-        return classify(df, target, explain_decisions=explain_decisions)
+        return classify(df, target, explain_decisions=explain_decisions, balanced=balanced)
     elif task == "regression":
         return regress(df, target, explain_decisions=explain_decisions)
 
     if y.dtype == "object" or y.nunique() < 20:
-        return classify(df, target, explain_decisions=explain_decisions)
+        return classify(df, target, explain_decisions=explain_decisions, balanced=balanced)
     else:
         return regress(df, target, explain_decisions=explain_decisions)
 

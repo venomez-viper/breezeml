@@ -18,9 +18,13 @@ low-code ML library makes together:
 4. **AI agents can use it.** [`breezeml-mcp`](guides/mcp.md) is a built-in
    Model Context Protocol server for Claude and other agents.
 
-Plus everything from earlier releases: 18 classifiers, 16 regressors,
-comparison leaderboards, hyperparameter search, cross-validation, feature
-engineering, optional XGBoost/LightGBM, plotting and SHAP explainability.
+Plus everything from the other releases: 22 classifiers, 22 regressors,
+9 clusterers, comparison leaderboards, hyperparameter search,
+cross-validation, feature engineering, optional XGBoost/LightGBM, plotting
+and SHAP explainability. Version 1.7 adds the
+[honest-ML toolkit](guides/honest-ml.md): data audits with target-leakage
+detection, fairness reports, an imbalance toolkit, and blending that admits
+when it loses.
 
 ## Quickstart
 
@@ -54,6 +58,8 @@ pip install "breezeml[all]"
 
 ## Where to go next
 
+- [Honest ML: audit, fairness, imbalance, blend](guides/honest-ml.md)
+- [Toolkits: track, anomaly, semi-supervised, native explain, CLI](guides/toolkits.md)
 - [Export: graduate from BreezeML anytime](guides/export.md)
 - [Model cards & teaching narration](guides/model-cards.md)
 - [Deploy: DataFrame to API in one line](guides/deploy.md)

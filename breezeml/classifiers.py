@@ -10,6 +10,7 @@ from joblib import Parallel, delayed
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.ensemble import (
     AdaBoostClassifier,
+    BaggingClassifier,
     ExtraTreesClassifier,
     GradientBoostingClassifier,
     HistGradientBoostingClassifier,
@@ -26,14 +27,14 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.model_selection import RandomizedSearchCV, cross_validate, train_test_split
-from sklearn.naive_bayes import ComplementNB, GaussianNB, MultinomialNB
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import BernoulliNB, ComplementNB, GaussianNB, MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import LinearSVC, SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
+from sklearn.linear_model import LogisticRegression, PassiveAggressiveClassifier, RidgeClassifier, SGDClassifier
 
 from ._preprocessing import _build_preprocessor, _detect_types
 from ._progress import ProgressBar
@@ -382,6 +383,22 @@ def complement_nb(df: pd.DataFrame = None, target: str = None, alpha: float = 1.
     return _train(ComplementNB(alpha=alpha), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, force_minmax=True, cv=cv)
 
 
+def bernoulli_nb(df: pd.DataFrame = None, target: str = None, alpha: float = 1.0, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(BernoulliNB(alpha=alpha), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def passive_aggressive(df: pd.DataFrame = None, target: str = None, C: float = 1.0, max_iter: int = 1000, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(PassiveAggressiveClassifier(C=C, max_iter=max_iter, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def nearest_centroid(df: pd.DataFrame = None, target: str = None, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(NearestCentroid(), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
+def bagging(df: pd.DataFrame = None, target: str = None, n_estimators: int = 50, random_state: int = 42, *, X=None, y=None, X_test=None, y_test=None, cv=None):
+    return _train(BaggingClassifier(n_estimators=n_estimators, random_state=random_state), df=df, target=target, X=X, y=y, X_test=X_test, y_test=y_test, cv=cv)
+
+
 def _base_classifier_factories():
     return {
         "Logistic Regression": lambda: LogisticRegression(max_iter=500),
@@ -402,6 +419,10 @@ def _base_classifier_factories():
         "LDA": lambda: LinearDiscriminantAnalysis(),
         "QDA": lambda: QuadraticDiscriminantAnalysis(),
         "Complement NB": lambda: ComplementNB(),
+        "Bernoulli NB": lambda: BernoulliNB(),
+        "Passive Aggressive": lambda: PassiveAggressiveClassifier(max_iter=1000, random_state=42),
+        "Nearest Centroid": lambda: NearestCentroid(),
+        "Bagging": lambda: BaggingClassifier(n_estimators=50, random_state=42),
     }
 
 
@@ -491,6 +512,10 @@ def _algo_factories():
         "lda": lambda: LinearDiscriminantAnalysis(),
         "qda": lambda: QuadraticDiscriminantAnalysis(),
         "complement_nb": lambda: ComplementNB(),
+        "bernoulli_nb": lambda: BernoulliNB(),
+        "passive_aggressive": lambda: PassiveAggressiveClassifier(max_iter=1000, random_state=42),
+        "nearest_centroid": lambda: NearestCentroid(),
+        "bagging": lambda: BaggingClassifier(n_estimators=50, random_state=42),
     }
     try:
         _load_xgb_classifier()

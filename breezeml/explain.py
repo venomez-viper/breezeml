@@ -1,3 +1,78 @@
+"""
+Explainability: understand WHY the model predicts what it predicts.
+
+Two paths:
+- ``permutation_importance()`` and ``partial_dependence()`` run on the 4
+  core dependencies (sklearn.inspection) - no extras needed.
+- ``explain()`` produces SHAP summary plots via ``pip install breezeml[explain]``.
+"""
+from __future__ import annotations
+
+
+def permutation_importance(model, df, target, n_repeats=5, random_state=42, show=True):
+    """Model-agnostic feature importance on core dependencies only.
+
+    Shuffles each feature and measures how much the score drops - features
+    the model truly relies on hurt the most when scrambled. Unlike
+    tree-impurity importances, this works for ANY model and is computed on
+    data the model did not memorize feature order from.
+
+    Returns a list of {feature, importance_mean, importance_std}, sorted.
+    """
+    from sklearn.inspection import permutation_importance as _perm
+
+    from ._validation import check_df_target
+
+    check_df_target(df, target)
+    pipeline = getattr(model, "pipeline", model)
+    X = df.drop(columns=[target])
+    y = df[target]
+
+    result = _perm(pipeline, X, y, n_repeats=n_repeats, random_state=random_state, n_jobs=-1)
+    rows = [
+        {
+            "feature": col,
+            "importance_mean": round(float(result.importances_mean[i]), 4),
+            "importance_std": round(float(result.importances_std[i]), 4),
+        }
+        for i, col in enumerate(X.columns)
+    ]
+    rows.sort(key=lambda r: r["importance_mean"], reverse=True)
+    if show:
+        print(f"\nPermutation importance (score drop when shuffled, {n_repeats} repeats)")
+        print("-" * 56)
+        for r in rows[:15]:
+            bar = "#" * max(int(40 * r["importance_mean"] / max(rows[0]["importance_mean"], 1e-9)), 0)
+            print(f"  {str(r['feature'])[:28]:<30}{r['importance_mean']:<9}{bar}")
+        print()
+    return rows
+
+
+def partial_dependence(model, df, target, feature, grid_resolution=25):
+    """How predictions change as ONE feature moves, all else held constant.
+
+    Returns {"grid": [...], "average_prediction": [...]} - plot it, or read
+    the direction: rising values mean the feature pushes predictions up.
+    Core dependencies only.
+    """
+    from sklearn.inspection import partial_dependence as _pd
+
+    from ._validation import check_df_target
+
+    check_df_target(df, target)
+    pipeline = getattr(model, "pipeline", model)
+    X = df.drop(columns=[target])
+    if feature not in X.columns:
+        raise ValueError(f"Feature '{feature}' not found. Available: {list(X.columns)}")
+
+    result = _pd(pipeline, X, features=[feature], grid_resolution=grid_resolution, kind="average")
+    return {
+        "feature": feature,
+        "grid": [float(v) for v in result["grid_values"][0]],
+        "average_prediction": [float(v) for v in result["average"][0]],
+    }
+
+
 def explain(model, df, target_col=None):
     """
     Generate a SHAP summary plot explaining the feature importance of a trained BreezeML model.

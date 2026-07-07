@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "breezeml"
-version = "1.6.0"
+version = "1.7.0"
 authors = [
   { name="Akash Anipakalu Giridhar", email="akashagakash@gmail.com" }
 ]
@@ -49,6 +49,7 @@ mcp = ["mcp>=1.0"]
 all = ["sentence-transformers", "shap", "matplotlib", "xgboost", "lightgbm", "seaborn", "fastapi>=0.100", "uvicorn>=0.23"]
 
 [project.scripts]
+breezeml = "breezeml.cli:main"
 breezeml-mcp = "breezeml.mcp_server:main"
 
 [project.urls]
