@@ -45,6 +45,9 @@ def pr_curve(model, X_test, y_test):
     if not hasattr(pipeline, "predict_proba") and not hasattr(pipeline, "decision_function"):
         raise TypeError("This model does not support probability predictions required for a PR curve.")
 
+    if len(set(y_test)) > 2:
+        raise ValueError("pr_curve supports binary classification only.")
+
     print("BreezeML Generating PR curve plot...")
     fig, ax = plt.subplots(figsize=(8, 6))
     PrecisionRecallDisplay.from_estimator(pipeline, X_test, y_test, ax=ax)
