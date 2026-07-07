@@ -79,6 +79,30 @@ def roc_curve(model, X_test, y_test):
     plt.show()
 
 
+def residuals(model, X_test, y_test):
+    try:
+        from sklearn.metrics import mean_absolute_error
+    except ImportError as exc:
+        raise ImportError("scikit-learn is required for residual plotting.") from exc
+
+    plt = _require_matplotlib()
+    pipeline = getattr(model, "pipeline", model)
+    preds = pipeline.predict(X_test)
+    resid = y_test - preds
+    mae = mean_absolute_error(y_test, preds)
+
+    print("BreezeML Generating residuals plot...")
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.scatter(preds, resid, alpha=0.6, edgecolors="k", linewidth=0.5)
+    ax.axhline(y=0, color="r", linestyle="--", alpha=0.5)
+    ax.set_title(f"Residuals vs Predicted (MAE={mae:.3f})", pad=20, fontsize=14)
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("Residuals")
+    ax.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
 def compare_chart(results, metric="accuracy"):
     """Plot a bar chart from compare() results."""
     plt = _require_matplotlib()
