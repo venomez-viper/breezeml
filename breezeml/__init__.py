@@ -4,7 +4,7 @@ students, analysts, and AI agents. Train, compare, explain, export, and
 deploy scikit-learn models without drowning in boilerplate.
 """
 
-__version__ = "1.7.0"
+__version__ = "1.7.1"
 __author__ = "Akash Anipakalu Giridhar"
 
 from .breezeml import auto, classify, creator, datasets, fit, from_csv, load, predict, regress, report, save

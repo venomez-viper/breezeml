@@ -45,7 +45,7 @@ That is the core idea: fewer moving parts, fewer repetitive preprocessing steps,
 
 ---
 
-## Why BreezeML (v1.0)
+## Why BreezeML
 
 Four promises no other low-code ML library makes together:
 
@@ -182,10 +182,18 @@ breezeml/
 |-- deploy.py          # Breath 3: FastAPI + Docker serving
 |-- drift.py           # Breath 3: PSI drift detection
 |-- timeseries.py      # Breath 3: forecasting with honesty checks
+|-- audit.py           # Breath 3: data quality + target-leakage detection
+|-- fairness.py        # Breath 3: per-group parity reports
+|-- imbalance.py       # Breath 3: thresholds, calibration, cost decisions
+|-- blend.py           # Breath 3: vote/stack ensembles with honest verdicts
+|-- track.py           # Breath 3: experiment log (.breezeml/runs.json)
+|-- cli.py             # Breath 3: the breezeml terminal command
 |-- clustering.py      # Breath 4: 9 clustering algorithms
+|-- anomaly.py         # Breath 4: 4 detectors + consensus
+|-- semisupervised.py  # Breath 4: self-training on partial labels
 |-- features.py        # Breath 4: selection, importances, PCA, polynomial
 |-- text.py            # Breath 4: semantic text embeddings
-|-- explain.py         # Breath 4: SHAP explainability
+|-- explain.py         # Breath 4: permutation importance + PDP (native), SHAP (extra)
 |-- plot.py            # Breath 4: plotting helpers
 |-- mcp_server.py      # Breath 4: AI-agent tools (breezeml-mcp)
 `-- __init__.py        # public API + zen garden
@@ -238,6 +246,7 @@ pip install "breezeml[boost]"
 pip install "breezeml[datasets]"
 pip install "breezeml[deploy]"   # fastapi + uvicorn for deploy()
 pip install "breezeml[onnx]"     # ONNX export
+pip install "breezeml[automl]"   # Optuna backend for automl()
 pip install "breezeml[mcp]"      # MCP server for AI agents
 pip install "breezeml[all]"
 ```
@@ -807,10 +816,7 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 | `test_classification.py` | Basic classification smoke test |
 | `test_classifiers.py` | All classifiers end-to-end |
 | `test_clustering.py` | Clustering algorithms |
-| `test_boost.py` | Optional XGBoost and LightGBM coverage |
-| `test_features.py` | Feature engineering helpers |
 | `test_regression.py` | Core regression pipeline |
-| `test_regressors.py` | Regressor leaderboard, detailed report, and tuning coverage |
 | `test_save_load.py` | Model persistence |
 | `test_v020_features.py` | Broader feature coverage from earlier releases |
 

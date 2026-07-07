@@ -24,24 +24,30 @@ _GUIDE = """\
   BREATH 2 - understand and choose
   --------------------------------------------------
     auto(df, target, explain_decisions=True)   # narrates every choice
-    classifiers.compare(df, target)             # leaderboard, 18 models
-    regressors.compare(df, target)              # leaderboard, 16 models
+    classifiers.compare(df, target)             # leaderboard, 22 models
+    regressors.compare(df, target)              # leaderboard, 22 models
     classifiers.quick_tune(df, target, algo=..) # tune one model
     card(model, "MODEL_CARD.md")                # honest model card
 
   BREATH 3 - automate and ship
   --------------------------------------------------
+    audit(df, target)                    # catch leaks BEFORE training
     automl(df, target, time_budget=60)   # search everything, honestly
+    blend(df, target)                    # ensemble the leaderboard winners
+    imbalance.tune_threshold(model, ..)  # stop using 0.5 on rare classes
+    fairness.report(model, df, "group")  # who does the model serve?
     export(model, "train.py")            # pure-sklearn script, no lock-in
     deploy(model, "api/")                # FastAPI + Docker, ready to run
     drift.check(model, new_df)           # is production data drifting?
     timeseries.forecast(df, y, horizon)  # forecasting w/ naive baseline
+    track.log(model, report, "name")     # remember which run was good
 
   BREATH 4 - beyond
   --------------------------------------------------
-    features / clustering / text / explain / plot   # toolkits
-    breezeml-mcp                                    # AI agents use it too
-    zen() . haiku() . fortune() . sensei()          # the garden
+    features / clustering / anomaly / semisupervised   # toolkits
+    text / explain / plot                               # more toolkits
+    breezeml CLI + breezeml-mcp        # terminal + AI agents
+    zen() . haiku() . fortune() . sensei()              # the garden
 
   Rules of the garden:
     - 4 dependencies, always. Extras are optional: [boost] [deploy]

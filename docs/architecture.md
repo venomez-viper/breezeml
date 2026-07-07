@@ -21,7 +21,7 @@ beginner's first day never needs anything else.
 
 ## Breath 2 - understand and choose
 
-`compare()` leaderboards (18 classifiers / 16 regressors),
+`compare()` leaderboards (22 classifiers / 22 regressors),
 `quick_tune()`, `detailed_report()`, `explain_decisions=True` narration,
 and `card()` model cards. This is where BreezeML teaches: every automatic
 decision can explain itself, computed from your data.
@@ -31,7 +31,9 @@ decision can explain itself, computed from your data.
 `automl()` (budget-aware search), `export()` (zero lock-in sklearn
 codegen), `deploy()` (FastAPI + Docker), `drift.check()` and the live
 `/drift` endpoint, `timeseries.forecast()` with the naive-baseline
-honesty check. Production-aware, still 4 dependencies.
+honesty check. Since v1.7: `audit()` leakage detection, `fairness.report()`,
+the `imbalance` toolkit, `blend()`, `track` experiment logging, and the
+`breezeml` CLI. Production-aware, still 4 dependencies.
 
 ## Breath 4 - extend
 

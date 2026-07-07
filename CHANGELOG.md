@@ -5,6 +5,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.7.1] - 2026-07-07
+
+### Fixed
+- **Docs audit**: architecture tree now lists all v1.7 modules; model counts corrected to 22/22/9 everywhere (README, architecture doc, and the in-library `guide()`); `[automl]` extra added to the install list; examples table trimmed to files that exist.
+
 ## [1.7.0] - 2026-07-07
 
 The Honest Machine: tools that tell you when your data is lying, when your model treats groups unequally, and when extra complexity did not earn its keep.
