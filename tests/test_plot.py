@@ -1,3 +1,6 @@
+import pytest
+pytest.importorskip("matplotlib")
+
 import matplotlib
 matplotlib.use("Agg")
 
