@@ -27,12 +27,37 @@ def _stdlib_names():
     names = getattr(sys, "stdlib_module_names", None)  # Python 3.10+
     if names is not None:
         return set(names)
-    # Python 3.9 fallback: derive from the stdlib directory + builtins
+    # Python 3.9 fallback: sys.stdlib_module_names does not exist yet.
+    # Derive the set from the stdlib directories plus builtins. C-extension
+    # stdlib modules (math, _json, ...) live in lib-dynload, not the main
+    # stdlib dir and not always in sys.builtin_module_names, so scan both
+    # and merge a curated core set as a final safety net.
     import sysconfig
 
-    stdlib_dir = Path(sysconfig.get_paths()["stdlib"])
-    found = {p.name.split(".")[0] for p in stdlib_dir.iterdir()}
-    return found | set(sys.builtin_module_names)
+    found = set(sys.builtin_module_names)
+    paths = sysconfig.get_paths()
+    for key in ("stdlib", "platstdlib"):
+        base = paths.get(key)
+        if not base:
+            continue
+        base_dir = Path(base)
+        if not base_dir.exists():
+            continue
+        for item in base_dir.iterdir():
+            found.add(item.name.split(".")[0])
+        dynload = base_dir / "lib-dynload"
+        if dynload.exists():
+            for item in dynload.iterdir():
+                found.add(item.name.split(".")[0])
+    # Core stdlib names that must always count, regardless of build layout.
+    found |= {
+        "math", "cmath", "json", "csv", "os", "sys", "io", "re", "time",
+        "datetime", "collections", "itertools", "functools", "warnings",
+        "pathlib", "typing", "abc", "argparse", "subprocess", "random",
+        "statistics", "decimal", "hashlib", "pickle", "copy", "enum",
+        "contextlib", "dataclasses", "logging", "operator", "textwrap",
+    }
+    return found
 
 
 def _module_level_imports(tree: ast.Module):
