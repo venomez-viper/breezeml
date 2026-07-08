@@ -49,6 +49,10 @@ nav:
       - MCP Server (AI agents): guides/mcp.md
       - Honest ML (audit, fairness, imbalance, blend): guides/honest-ml.md
       - Toolkits (track, anomaly, semi-supervised, CLI): guides/toolkits.md
+      - Significance (is this difference real?): guides/significance.md
+      - Multi-output (predict many at once): guides/multi-output.md
+      - Recommenders (what to see next?): guides/recommenders.md
+      - Survival (when will it happen?): guides/survival.md
   - Benchmarks: benchmarks.md
   - API Reference:
       - Core: api/core.md

@@ -116,6 +116,10 @@ need it.
 
 | Feature | Description |
 |---|---|
+| **Statistical significance testing** *(v1.8)* | `significance.mcnemar()` and `paired_cv_ttest()` attach a p-value to a model gap and say "keep the simpler model" when it is noise; pure numpy, no scipy |
+| **Multi-label / multi-output** *(v1.8)* | `multi.multi_label()` and `multi.multi_output()` predict several targets at once, with per-target metrics plus `subset_accuracy` / `hamming_loss` |
+| **Recommender systems** *(v1.8)* | `recommend.collaborative_filter()` does SVD collaborative filtering with a popularity fallback and honest cold-start warnings |
+| **Survival analysis** *(v1.8)* | `survival.kaplan_meier()` and `groups_kaplan_meier()` (with a log-rank test) do time-to-event modeling and refuse naive regression on censored durations |
 | **Data audit + leakage detection** *(v1.7)* | `audit()` flags ID columns, duplicates, label noise, and single-feature target leakage; `contamination()` checks train/test overlap |
 | **Fairness reports** *(v1.7)* | `fairness.report()` gives per-group metrics, demographic parity ratio, a four-fifths rule verdict, and TPR/FPR gaps |
 | **Imbalance toolkit** *(v1.7)* | `balanced=True` training plus `tune_threshold()`, `calibrate()`, and `cost_report()` on the core dependencies |
@@ -411,6 +415,72 @@ The result is a normal `EasyModel`: `save()`, `card()`, and `deploy()` work.
 ```python
 model, report = breezeml.blend(df, "target", method="stack")
 print(report["blend_score"], report["best_single_score"], report["beats_best_single"])
+```
+
+#### `significance.mcnemar(model_a, model_b, df, target)` *(v1.8)*
+
+Ask whether one model really beat another or you just got a lucky seed.
+`mcnemar()` splits `df` once (stratified, matching the core holdout), predicts
+with both fitted models on that shared slice, and runs McNemar's test on the
+discordant pairs, returning `statistic`, `p_value`, `n_discordant`,
+`significant`, and a plain-English `verdict`. `paired_cv_ttest(algo_a, algo_b,
+df, target)` compares two algorithms across the same CV folds with a paired
+t-test. Both are pure numpy (no scipy), and both say "keep the simpler model"
+when the gap is not significant.
+
+```python
+from breezeml import significance
+r = significance.mcnemar(model_a, model_b, df, "target")
+print(r["p_value"], r["significant"], r["verdict"])
+significance.paired_cv_ttest("random_forest", "logistic", df, "target")
+```
+
+#### `multi.multi_label(df, targets, chain=False)` *(v1.8)*
+
+Predict several label columns at once. Returns an `(EasyModel, report)` pair
+where the report has per-target accuracy/F1 plus `subset_accuracy` (exact-match
+ratio) and `hamming_loss`. `chain=True` uses a `ClassifierChain` to capture
+label correlations; the default fits one independent model per label.
+`multi.multi_output(df, targets)` does the regression analogue and reports
+per-target r2/mae/rmse plus `average_r2`.
+
+```python
+from breezeml import multi
+model, report = multi.multi_label(df, ["billing", "urgent", "refund"])
+print(report["subset_accuracy"], report["hamming_loss"])
+multi.multi_output(df, ["temperature", "pressure"])
+```
+
+#### `recommend.collaborative_filter(df, user_col, item_col, rating_col=None)` *(v1.8)*
+
+SVD collaborative filtering on the core dependencies. Builds a user-item matrix
+from a long-format interactions table, factorizes it with a truncated SVD, and
+returns a fitted `Recommender`. `rec.recommend(user, k)` returns `[(item,
+score), ...]` over items the user has not seen; `rec.recommend_report(user, k)`
+adds honest `cold_start` and `method` (`"svd"` or `"popularity"`) flags. Cold
+users fall back to global popularity and it says so; sparse matrices and
+single-interaction users/items get warnings.
+
+```python
+from breezeml import recommend
+rec = recommend.collaborative_filter(df, "user", "item", rating_col="stars")
+print(rec.recommend_report("u_7", k=5))
+```
+
+#### `survival.kaplan_meier(df, duration_col, event_col)` *(v1.8)*
+
+Time-to-event modeling that respects censoring. `kaplan_meier()` returns the
+survival curve (`timeline`, `survival`, `ci_lower`/`ci_upper`,
+`median_survival`, `censoring_rate`) and prints a loud warning against
+regressing on `duration` while ignoring `event`. `groups_kaplan_meier(...,
+group_col)` fits a curve per group and adds a log-rank test
+(`logrank_p_value`, `significant`); `check_censoring()` reports the censoring
+rate on its own. Pure numpy.
+
+```python
+from breezeml import survival
+km = survival.kaplan_meier(df, "duration", "event")
+survival.groups_kaplan_meier(df, "duration", "event", "arm")
 ```
 
 #### `export(model, path, data_path="YOUR_DATA.csv")` *(v1.0)*
@@ -873,6 +943,10 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] Semi-supervised self-training (`breezeml.semisupervised`) *(v1.7)*
 - [x] Command line interface (`breezeml train/compare/automl/audit/...`) *(v1.7)*
 - [x] Native explainability without SHAP (permutation importance, partial dependence) *(v1.7)*
+- [x] Statistical significance testing (`breezeml.significance`, McNemar + paired CV t-test) *(v1.8)*
+- [x] Multi-label classification and multi-output regression (`breezeml.multi`) *(v1.8)*
+- [x] Recommender systems with SVD collaborative filtering (`breezeml.recommend`) *(v1.8)*
+- [x] Survival analysis (`breezeml.survival`, Kaplan-Meier + log-rank test) *(v1.8)*
 - [ ] ONNX export for categorical pipelines
 
 ---

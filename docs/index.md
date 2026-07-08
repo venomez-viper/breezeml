@@ -24,7 +24,12 @@ cross-validation, feature engineering, optional XGBoost/LightGBM, plotting
 and SHAP explainability. Version 1.7 adds the
 [honest-ML toolkit](guides/honest-ml.md): data audits with target-leakage
 detection, fairness reports, an imbalance toolkit, and blending that admits
-when it loses.
+when it loses. Version 1.8 adds four more answers: statistical
+[significance testing](guides/significance.md) (is this difference real?),
+[multi-label and multi-output](guides/multi-output.md) prediction (many
+targets at once), [recommenders](guides/recommenders.md) (what should this
+user see next?), and [survival analysis](guides/survival.md) (when will the
+event happen?).
 
 ## Quickstart
 
@@ -60,6 +65,10 @@ pip install "breezeml[all]"
 
 - [Honest ML: audit, fairness, imbalance, blend](guides/honest-ml.md)
 - [Toolkits: track, anomaly, semi-supervised, native explain, CLI](guides/toolkits.md)
+- [Significance: is this difference real?](guides/significance.md)
+- [Multi-output: predict many targets at once](guides/multi-output.md)
+- [Recommenders: what should this user see next?](guides/recommenders.md)
+- [Survival: when will the event happen?](guides/survival.md)
 - [Export: graduate from BreezeML anytime](guides/export.md)
 - [Model cards & teaching narration](guides/model-cards.md)
 - [Deploy: DataFrame to API in one line](guides/deploy.md)

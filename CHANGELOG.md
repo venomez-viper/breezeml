@@ -5,6 +5,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.8.0] - 2026-07-08
+
+Four Questions: is this difference real, can it predict many things at once, what should this user see next, and when will the event happen? Four new modules, each with the honesty thread intact: every one warns when the naive approach is wrong.
+
+### Added
+- **Statistical significance** (`breezeml.significance`): `mcnemar(model_a, model_b, df, target)` splits one shared holdout, runs McNemar's test on the discordant pairs, and returns `statistic`, `p_value`, `n_discordant`, `significant`, and a plain-English `verdict`; `paired_cv_ttest(algo_a, algo_b, df, target)` scores two algorithms on the same CV folds and returns the paired `t_statistic`, `p_value`, `mean_difference`, and verdict. Both say "keep the simpler model" when the gap is not significant. The error function, chi-square tail, Student t p-value, and incomplete beta are all pure numpy - no scipy.
+- **Multi-label / multi-output** (`breezeml.multi`): `multi_label(df, targets, chain=False)` predicts several label columns at once (independent models, or a `ClassifierChain` when `chain=True`) and returns an `(EasyModel, report)` with per-target accuracy/F1 plus `subset_accuracy` (exact-match ratio) and `hamming_loss`; `multi_output(df, targets)` does the regression analogue and returns per-target r2/mae/rmse plus `average_r2`.
+- **Recommender systems** (`breezeml.recommend`): the `Recommender` class and `collaborative_filter(df, user_col, item_col, rating_col=None)` build a user-item matrix and factorize it with a truncated SVD. `recommend(user, k)` returns `[(item, score), ...]` over unseen items; `recommend_report(user, k)` adds `cold_start` and `method` (`"svd"` / `"popularity"`) flags. Cold-start users fall back to global popularity honestly, and sparse matrices and single-interaction users/items get warnings.
+- **Survival analysis** (`breezeml.survival`): `kaplan_meier(df, duration_col, event_col)` returns the survival curve with Greenwood standard errors, 95% pointwise CIs, `median_survival`, and `censoring_rate`; `groups_kaplan_meier(..., group_col)` fits a curve per group and adds a log-rank test (`logrank_statistic`, `logrank_p_value`, `significant`); `check_censoring()` reports the censoring rate and warns loudly against regressing on censored durations. Pure numpy, including the chi-square tail behind the log-rank test.
+- **Docs**: new guides for all four modules (`docs/guides/significance.md`, `docs/guides/multi-output.md`, `docs/guides/recommenders.md`, `docs/guides/survival.md`).
+
 ## [1.7.1] - 2026-07-07
 
 ### Fixed
