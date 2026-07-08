@@ -47,3 +47,10 @@ docs/_build/
 # Local experiment artifacts
 logs.log
 models_v18/
+
+# Smoke-test artifacts from deploy()/export()
+/api/
+/train.py
+/model.joblib
+/deployment/
+.breezeml/
