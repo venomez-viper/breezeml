@@ -116,6 +116,10 @@ need it.
 
 | Feature | Description |
 |---|---|
+| **Conformal prediction** *(v1.9)* | `conformal_regressor()` and `conformal_classifier()` wrap any trained model with distribution-free prediction intervals / sets at a guaranteed marginal coverage; `coverage_report()` checks it empirically |
+| **Active learning** *(v1.9)* | `active.query()` ranks an unlabeled pool by informativeness (uncertainty/margin/entropy); `active.simulate()` reports honestly whether active learning beat a random baseline |
+| **Automatic feature engineering** *(v1.9)* | `autofeat.engineer()` does datetime expansion, leakage-safe out-of-fold target encoding, capped numeric interactions, and pruning, returning `(new_df, report)` |
+| **Causal inference and uplift** *(v1.9)* | `causal.estimate_ate()` (naive/t_learner/ipw) reports the adjusted effect beside the confounded baseline; `causal.uplift()` gives per-row CATE; `causal.check_confounding()` flags covariate imbalance |
 | **Statistical significance testing** *(v1.8)* | `significance.mcnemar()` and `paired_cv_ttest()` attach a p-value to a model gap and say "keep the simpler model" when it is noise; pure numpy, no scipy |
 | **Multi-label / multi-output** *(v1.8)* | `multi.multi_label()` and `multi.multi_output()` predict several targets at once, with per-target metrics plus `subset_accuracy` / `hamming_loss` |
 | **Recommender systems** *(v1.8)* | `recommend.collaborative_filter()` does SVD collaborative filtering with a popularity fallback and honest cold-start warnings |
@@ -481,6 +485,79 @@ rate on its own. Pure numpy.
 from breezeml import survival
 km = survival.kaplan_meier(df, "duration", "event")
 survival.groups_kaplan_meier(df, "duration", "event", "arm")
+```
+
+#### `conformal_regressor(model, calib_df, target, alpha=0.1)` *(v1.9)*
+
+Honest, distribution-free uncertainty on any already-trained model. Calibrate
+on held-out data the model has never seen and every prediction carries a
+prediction interval (regression) or prediction set (classification) with a
+guaranteed marginal coverage of at least `1 - alpha` (alpha=0.1 gives 90%).
+`conformal_regressor()` returns a `ConformalRegressor` whose
+`predict_interval(X)` yields `lower`/`point`/`upper` columns (pass
+`normalize=True` for locally adaptive bands); `conformal_classifier()` returns
+a `ConformalClassifier` whose `predict_set(X)` yields per-row label sets. Both
+have `coverage_report(df, target)` to verify empirical coverage.
+
+```python
+from breezeml import conformal, regressors
+model, _ = regressors.random_forest(train_df, "target")
+cp = conformal.conformal_regressor(model, calib_df, "target", alpha=0.1)
+bands = cp.predict_interval(test_df.drop(columns=["target"]))
+cp.coverage_report(test_df, "target")   # empirical coverage ~ 90%
+```
+
+#### `active.query(model, unlabeled_df, k, strategy)` *(v1.9)*
+
+Spend your labeling budget where it helps. `query()` ranks an unlabeled pool by
+informativeness (`strategy` is `uncertainty`, `margin`, `entropy`, or `random`)
+and returns `{"indices", "scores", "strategy", "k"}` for the top-k rows to
+label next. `active.simulate(df, target, initial, budget, step, strategy)` runs
+the active loop against a random baseline from the same starting set and returns
+`budgets`, `active_accuracy`, `random_accuracy`, `area_between_curves`, and
+`active_wins`, printing an honest verdict on whether active learning won.
+
+```python
+from breezeml import active
+pick = active.query(model, unlabeled_df, k=20, strategy="uncertainty")
+curve = active.simulate(df, "label", initial=20, budget=120, step=20)
+print(curve["active_wins"], curve["area_between_curves"])
+```
+
+#### `autofeat.engineer(df, target)` *(v1.9)*
+
+Automatic feature engineering that enriches without leaking. One call does
+datetime expansion, leakage-safe out-of-fold (5-fold) target-mean encoding plus
+frequency encoding for high-cardinality categoricals, capped pairwise numeric
+interactions, and pruning of constant and near-duplicate (`|r| > 0.98`) columns.
+Returns `(new_df, report)` where `report` lists `added`, `dropped`, `encoded`,
+`datetime_expanded`, and before/after feature counts. The input frame is never
+mutated.
+
+```python
+from breezeml import autofeat
+new_df, report = autofeat.engineer(df, "target")
+print(report["n_features_before"], "->", report["n_features_after"])
+```
+
+#### `causal.estimate_ate(df, treatment, outcome, method="t_learner")` *(v1.9)*
+
+Separate correlation from causation. `estimate_ate()` always reports the
+confounded naive baseline beside the adjusted estimate (`method` is `naive`,
+`t_learner`, or `ipw`) and returns `ate`, `naive_ate`, `propensity_range`, and a
+plain-English `note`; a large gap between naive and adjusted is the footprint of
+confounding. `causal.uplift()` returns a `TLearnerPair` whose `predict_uplift(X)`
+gives the per-row treatment effect (CATE). `causal.check_confounding()` flags
+covariate imbalance via standardized mean differences and warns that
+observational estimates rest on the untestable no-unmeasured-confounders
+assumption.
+
+```python
+from breezeml import causal
+res = causal.estimate_ate(df, "treated", "spend", method="t_learner")
+print(res["ate"], res["naive_ate"], res["note"])
+pair, r = causal.uplift(df, "treated", "spend")
+causal.check_confounding(df, "treated", "spend")
 ```
 
 #### `export(model, path, data_path="YOUR_DATA.csv")` *(v1.0)*
@@ -947,6 +1024,10 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 - [x] Multi-label classification and multi-output regression (`breezeml.multi`) *(v1.8)*
 - [x] Recommender systems with SVD collaborative filtering (`breezeml.recommend`) *(v1.8)*
 - [x] Survival analysis (`breezeml.survival`, Kaplan-Meier + log-rank test) *(v1.8)*
+- [x] Conformal prediction (`breezeml.conformal`, distribution-free intervals and sets) *(v1.9)*
+- [x] Active learning (`breezeml.active`, query strategies + honest random baseline) *(v1.9)*
+- [x] Automatic feature engineering (`breezeml.autofeat`, leakage-safe encoding) *(v1.9)*
+- [x] Causal inference and uplift (`breezeml.causal`, ATE + CATE + confounding check) *(v1.9)*
 - [ ] ONNX export for categorical pipelines
 
 ---

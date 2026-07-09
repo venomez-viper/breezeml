@@ -53,6 +53,10 @@ nav:
       - Multi-output (predict many at once): guides/multi-output.md
       - Recommenders (what to see next?): guides/recommenders.md
       - Survival (when will it happen?): guides/survival.md
+      - Conformal (honest uncertainty): guides/conformal.md
+      - Active Learning (spend labels wisely): guides/active-learning.md
+      - AutoFeat (enrich without leaking): guides/autofeat.md
+      - Causal (correlation vs causation): guides/causal.md
   - Benchmarks: benchmarks.md
   - API Reference:
       - Core: api/core.md

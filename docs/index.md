@@ -29,7 +29,11 @@ when it loses. Version 1.8 adds four more answers: statistical
 [multi-label and multi-output](guides/multi-output.md) prediction (many
 targets at once), [recommenders](guides/recommenders.md) (what should this
 user see next?), and [survival analysis](guides/survival.md) (when will the
-event happen?).
+event happen?). Version 1.9, "Honest Uncertainty and Cause", adds
+[conformal prediction](guides/conformal.md) (honest error bars on every
+prediction), [active learning](guides/active-learning.md) (spend labels
+wisely), [automatic feature engineering](guides/autofeat.md) (enrich without
+leaking), and [causal inference](guides/causal.md) (correlation vs causation).
 
 ## Quickstart
 
@@ -69,6 +73,10 @@ pip install "breezeml[all]"
 - [Multi-output: predict many targets at once](guides/multi-output.md)
 - [Recommenders: what should this user see next?](guides/recommenders.md)
 - [Survival: when will the event happen?](guides/survival.md)
+- [Conformal: honest uncertainty on every prediction](guides/conformal.md)
+- [Active learning: spend your labeling budget where it helps](guides/active-learning.md)
+- [AutoFeat: automatic feature engineering without leaking](guides/autofeat.md)
+- [Causal: separate correlation from causation](guides/causal.md)
 - [Export: graduate from BreezeML anytime](guides/export.md)
 - [Model cards & teaching narration](guides/model-cards.md)
 - [Deploy: DataFrame to API in one line](guides/deploy.md)

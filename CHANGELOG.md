@@ -5,6 +5,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [1.9.0] - 2026-07-09
+
+Honest Uncertainty and Cause: conformal gives honest uncertainty on every prediction, active learning spends labels wisely, automatic feature engineering enriches without leaking, and causal inference separates correlation from causation. The honesty thread holds: every module reports the naive or baseline answer next to the smart one.
+
+### Added
+- **Conformal prediction** (`breezeml.conformal`): `conformal_regressor(model, calib_df, target, alpha=0.1)` wraps an already-trained regressor and returns a `ConformalRegressor` whose `predict_interval(X)` gives a DataFrame with `lower`/`point`/`upper` columns guaranteed to cover the truth at `>= 1 - alpha` (with optional `normalize=True` for locally adaptive bands); `conformal_classifier(model, calib_df, target, alpha=0.1)` returns a `ConformalClassifier` whose `predict_set(X)` returns a list of label sets via the LAC score method. Both expose `coverage_report(df, target)` returning `target_coverage`, `empirical_coverage`, mean interval width / set size, and a `well_calibrated` flag. Distribution-free, using the finite-sample conformal quantile `ceil((n+1)(1-alpha))/n` on a held-out calibration set.
+- **Active learning** (`breezeml.active`): `query(model, unlabeled_df, k, strategy)` ranks an unlabeled pool by informativeness (strategies `uncertainty`, `margin`, `entropy`, `random`) and returns `{"indices", "scores", "strategy", "k"}` for the top-k rows to label next; `simulate(df, target, initial, budget, step, strategy)` runs the active loop against a random baseline from the same starting set and returns `budgets`, `active_accuracy`, `random_accuracy`, `area_between_curves`, and `active_wins`, printing an honest verdict on whether active learning beat random.
+- **Automatic feature engineering** (`breezeml.autofeat`): `engineer(df, target)` returns `(new_df, report)` after datetime expansion (year/month/day/dayofweek/is_weekend, plus hour when present), leakage-safe out-of-fold (5-fold) target-mean encoding and frequency encoding for high-cardinality categoricals, capped pairwise numeric interactions, and pruning of constant and near-duplicate (`|r| > 0.98`) columns. The `report` dict lists `added`, `dropped`, `encoded`, `datetime_expanded`, `n_features_before`, `n_features_after`, and `notes`. The input frame is never mutated.
+- **Causal inference and uplift** (`breezeml.causal`): `estimate_ate(df, treatment, outcome, method="naive"|"t_learner"|"ipw")` returns `ate`, `naive_ate`, `method`, `propensity_range`, `n_treated`, `n_control`, and a `note`, always reporting the confounded naive baseline next to the adjusted estimate; `uplift(df, treatment, outcome)` returns a `(TLearnerPair, report)` pair whose `predict_uplift(X)` gives the per-row CATE; `check_confounding(df, treatment, outcome)` returns per-covariate standardized mean differences with `imbalanced`, `max_abs_smd`, `looks_randomized`, and warns that observational estimates rest on the untestable no-unmeasured-confounders assumption.
+- **Docs**: new guides for all four modules (`docs/guides/conformal.md`, `docs/guides/active-learning.md`, `docs/guides/autofeat.md`, `docs/guides/causal.md`).
+
 ## [1.8.0] - 2026-07-08
 
 Four Questions: is this difference real, can it predict many things at once, what should this user see next, and when will the event happen? Four new modules, each with the honesty thread intact: every one warns when the naive approach is wrong.
