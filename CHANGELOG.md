@@ -5,6 +5,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [2.0.0] - 2026-07-10
+
+Honest by default, agent-native by design. 2.0 consolidates the scattered honesty toolkit into one verdict, unifies the model object, ships types, and puts the flagship report in the hands of AI agents.
+
+### Added
+- **`breezeml.report()` - the honest scorecard**: one call runs the whole honesty gauntlet on a trained model - cross-validated performance vs a naive baseline, a data audit for leakage and quality, class-imbalance severity, and an optional fairness check - and returns a single **SHIP / WARN / STOP** verdict as a `Report` with `to_dict()`, `to_json()`, `to_markdown()`, and a pretty console view. A single critical finding (leakage, or a model no better than guessing) is enough to say STOP.
+- **Unified `Model` object**: `fit(df, target)` returns one coherent object - `predict`, `evaluate`, `report`, `explain`, `card`, `export`, `deploy`, plus conformal uncertainty: `predict_interval(X, calib_df)` gives regression intervals and `predict_set(X, calib_df)` gives classification label sets that cover the truth at `>= 1 - alpha`. The public name is `Model` (`EasyModel` stays as an alias, so existing pickles and imports keep working).
+- **Agent-native**: the MCP server exposes a `report` tool that returns the SHIP/WARN/STOP verdict as structured JSON; its docstring instructs agents to confirm a SHIP verdict before calling `deploy` or `export`.
+- **Typed and stable**: ships a `py.typed` marker (PEP 561) so type checkers read BreezeML's annotations directly; public entry points are annotated. New `docs/stability.md` documents the public surface, semantic-versioning promise, and deprecation policy.
+
+### Changed
+- **BREAKING: `report(model, df)` now returns a `Report`** (the honest scorecard), not a bare metrics dict. Use `model.evaluate(df)` for a plain metrics dict.
+
+### Migration (1.x -> 2.0)
+- `metrics = report(model, df)`  ->  `metrics = model.evaluate(df)`.
+- Use `report(model, df)` (or `model.report(df)`) for the full honesty verdict.
+- No other public call changed; the four-dependency contract and zero-lock-in `export()` are unchanged.
+
 ## [1.9.0] - 2026-07-09
 
 Honest Uncertainty and Cause: conformal gives honest uncertainty on every prediction, active learning spends labels wisely, automatic feature engineering enriches without leaking, and causal inference separates correlation from causation. The honesty thread holds: every module reports the naive or baseline answer next to the smart one.

@@ -34,5 +34,9 @@ def test_auto_regression():
 def test_report():
     df = datasets.iris()
     model = fit(df, "species")
-    rep = report(model, df)
-    assert "accuracy" in rep
+    # 2.0: report() returns a Report (honest scorecard), not a metrics dict
+    rep = report(model, df, show=False)
+    assert rep.verdict in {"SHIP", "WARN", "STOP"}
+    assert "accuracy" in rep.sections["performance"]["metrics"]
+    # a plain metrics dict is available via evaluate()
+    assert "accuracy" in model.evaluate(df)
