@@ -23,7 +23,7 @@ from sklearn import datasets as skdatasets
 
 __all__ = [
     "classify", "regress", "fit", "predict", "from_csv",
-    "report", "save", "load", "auto", "creator", "datasets"
+    "report", "save", "load", "auto", "creator", "datasets", "Model", "EasyModel"
 ]
 
 
@@ -54,6 +54,24 @@ class EasyModel:
         """Plain-English feature importances via permutation importance."""
         from .explain import permutation_importance as _pi
         return _pi(self, df, target or self.target, show=show)
+
+    def predict_interval(self, X, calib_df, alpha=0.1):
+        """Conformal prediction intervals (regression). ``calib_df`` is a held-out
+        calibration set - required, because honest coverage needs unseen data."""
+        if self.task != "regression":
+            raise ValueError("predict_interval() is for regression; use predict_set() for classification.")
+        from .conformal import conformal_regressor
+        cp = conformal_regressor(self, calib_df, self.target, alpha=alpha)
+        return cp.predict_interval(X)
+
+    def predict_set(self, X, calib_df, alpha=0.1):
+        """Conformal prediction sets (classification): label sets that cover the
+        true class at >= 1 - alpha. ``calib_df`` is a held-out calibration set."""
+        if self.task != "classification":
+            raise ValueError("predict_set() is for classification; use predict_interval() for regression.")
+        from .conformal import conformal_classifier
+        cp = conformal_classifier(self, calib_df, self.target, alpha=alpha)
+        return cp.predict_set(X)
 
     def save(self, path):
         joblib.dump(self, path)
@@ -87,6 +105,11 @@ class EasyModel:
         if not self.meta:
             raise ValueError("No training metadata on this model (train with v0.4+ core API).")
         print(format_narration(narrate(self.meta)))
+
+
+# Public, stable name for the model object (2.0). EasyModel stays as an alias
+# so existing pickles and imports keep working.
+Model = EasyModel
 
 
 def classify(df, target, algo="forest", return_report=True, explain_decisions=False, balanced=False):

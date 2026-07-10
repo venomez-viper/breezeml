@@ -7,7 +7,7 @@ deploy scikit-learn models without drowning in boilerplate.
 __version__ = "1.9.0"
 __author__ = "Akash Anipakalu Giridhar"
 
-from .breezeml import auto, classify, creator, datasets, fit, from_csv, load, predict, regress, save
+from .breezeml import auto, classify, creator, datasets, fit, from_csv, load, predict, regress, save, Model, EasyModel
 from .report import report, Report
 from .export import export
 from .card import card
@@ -55,6 +55,8 @@ __all__ = [
     "from_csv",
     "report",
     "Report",
+    "Model",
+    "EasyModel",
     "export",
     "card",
     "deploy",
