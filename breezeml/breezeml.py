@@ -5,6 +5,9 @@ deploy scikit-learn models without drowning in boilerplate.
 
 Created by Akash Anipakalu Giridhar
 """
+from __future__ import annotations
+
+import numpy as np
 import pandas as pd
 import joblib
 
@@ -197,16 +200,17 @@ def _task_reason(y, task):
     )
 
 
-def fit(df, target, task="auto"):
+def fit(df: pd.DataFrame, target: str, task: str = "auto") -> EasyModel:
+    """Train a model and return one unified :class:`Model` (the 2.0 entry point)."""
     m, _ = auto(df, target, task=task)
     return m
 
 
-def predict(model, X):
+def predict(model: EasyModel, X: pd.DataFrame) -> np.ndarray:
     return model.predict(X)
 
 
-def from_csv(path, target):
+def from_csv(path: str, target: str) -> tuple[EasyModel, dict]:
     df = pd.read_csv(path)
     return auto(df, target)
 
@@ -236,7 +240,8 @@ def load(path):
     return EasyModel.load(path)
 
 
-def auto(df, target, task="auto", explain_decisions=False, balanced=False):
+def auto(df: pd.DataFrame, target: str, task: str = "auto",
+         explain_decisions: bool = False, balanced: bool = False):
     """Automatically pick classification or regression based on target."""
     check_df_target(df, target)
     y = df[target]
