@@ -10,6 +10,7 @@
 
 <br/>
 
+[![Website](https://img.shields.io/badge/website-breezeml.org-3ce6ac?logo=vercel&logoColor=white)](https://breezeml.org)
 [![PyPI version](https://badge.fury.io/py/breezeml.svg)](https://pypi.org/project/breezeml/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/breezeml?color=blue&label=PyPI%20Downloads)](https://pypi.org/project/breezeml/)
 ![CI Status](https://github.com/venomez-viper/breezeml/actions/workflows/ci.yml/badge.svg)
