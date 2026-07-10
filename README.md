@@ -121,6 +121,10 @@ need it.
 
 | Feature | Description |
 |---|---|
+| **Honest scorecard** *(v2.0)* | `report(model, df)` runs the whole honesty gauntlet - cross-validated performance vs a naive baseline, leakage audit, class imbalance, and optional fairness - and returns one **SHIP / WARN / STOP** verdict as a `Report` (`to_dict` / `to_json` / `to_markdown`) |
+| **Unified `Model` object** *(v2.0)* | `fit()` returns one coherent object: `predict` / `evaluate` / `report` / `explain` / `card` / `export` / `deploy`, plus conformal `predict_interval()` (regression) and `predict_set()` (classification) |
+| **Agent-native report tool** *(v2.0)* | the MCP server exposes a `report` tool, so AI agents read the SHIP/WARN/STOP verdict as JSON and confirm SHIP before calling `deploy` or `export` |
+| **Typed & stable** *(v2.0)* | ships a `py.typed` marker (PEP 561) so type checkers read BreezeML's types; public entry points annotated; documented semver + deprecation policy (`docs/stability.md`) |
 | **Conformal prediction** *(v1.9)* | `conformal_regressor()` and `conformal_classifier()` wrap any trained model with distribution-free prediction intervals / sets at a guaranteed marginal coverage; `coverage_report()` checks it empirically |
 | **Active learning** *(v1.9)* | `active.query()` ranks an unlabeled pool by informativeness (uncertainty/margin/entropy); `active.simulate()` reports honestly whether active learning beat a random baseline |
 | **Automatic feature engineering** *(v1.9)* | `autofeat.engineer()` does datetime expansion, leakage-safe out-of-fold target encoding, capped numeric interactions, and pruning, returning `(new_df, report)` |
@@ -362,6 +366,37 @@ Persist and restore any trained `EasyModel`.
 ```python
 save(model, "my_model.joblib")
 model = load("my_model.joblib")
+```
+
+#### `report(model, df, target=None, sensitive=None) -> Report` *(v2.0)*
+
+The honest scorecard. Runs the whole honesty gauntlet on a trained model -
+cross-validated performance vs a naive baseline, a data audit for leakage and
+quality, class-imbalance severity, and an optional fairness check - and returns
+one **SHIP / WARN / STOP** verdict.
+
+```python
+model = fit(df, "target")
+rep = report(model, df)            # prints SHIP / WARN / STOP
+rep.verdict                        # "SHIP" | "WARN" | "STOP"
+rep.to_json("report.json")         # also to_dict() / to_markdown()
+```
+
+#### The unified `Model` object *(v2.0)*
+
+`fit()` returns one coherent object. Every workflow verb is a method:
+
+```python
+model = fit(df, "target")
+model.evaluate(df)                 # cross-validated metrics dict
+model.report(df)                   # SHIP / WARN / STOP
+model.explain(df)                  # permutation importances
+model.card("MODEL_CARD.md")        # honest model card
+model.export("train.py")           # standalone sklearn, zero lock-in
+model.deploy("api/")               # FastAPI + Docker
+# honest uncertainty (held-out calibration set required):
+model.predict_interval(X, calib_df)   # regression: lower / point / upper
+model.predict_set(X, calib_df)        # classification: label sets
 ```
 
 #### `automl(df, target, time_budget=60)` *(v1.1)*
