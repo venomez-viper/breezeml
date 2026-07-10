@@ -53,10 +53,10 @@ breezeml = "breezeml.cli:main"
 breezeml-mcp = "breezeml.mcp_server:main"
 
 [project.urls]
-Homepage = "https://github.com/venomez-viper/breezeml"
+Homepage = "https://breezeml.org"
+Documentation = "https://breezeml.org"
 Repository = "https://github.com/venomez-viper/breezeml"
 Issues = "https://github.com/venomez-viper/breezeml/issues"
-Documentation = "https://pypi.org/project/breezeml/"
 
 [tool.setuptools.packages.find]
 include = ["breezeml*"]

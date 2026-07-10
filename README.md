@@ -23,7 +23,9 @@
 
 <br/>
 
-[**Getting Started**](#installation) · [**API Reference**](#api-reference) · [**Examples**](#examples) · [**Contributing**](CONTRIBUTING.md) · [**Changelog**](CHANGELOG.md)
+[**Website**](https://breezeml.org) · [**Getting Started**](#installation) · [**API Reference**](#api-reference) · [**Examples**](#examples) · [**Contributing**](CONTRIBUTING.md) · [**Changelog**](CHANGELOG.md)
+
+**Interactive docs & playground:** [**breezeml.org**](https://breezeml.org) — run BreezeML live in your browser, no install.
 
 </div>
 
