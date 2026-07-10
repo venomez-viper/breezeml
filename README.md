@@ -33,6 +33,8 @@
 
 BreezeML is a **beginner-friendly, production-aware ML workflow layer** for students, analysts, and AI agents. It helps you train, compare, explain, export, and deploy **scikit-learn** models without drowning in boilerplate, while keeping the underlying workflow statistically sound: leakage-safe preprocessing, stratified splits, honest metrics, and reproducible seeds by default.
 
+> **New in 2.0 — honest by default, agent-native by design.** One call, one verdict: `report(model, df)` runs the whole honesty gauntlet (performance vs a naive baseline, leakage audit, class imbalance, fairness) and returns a single **SHIP / WARN / STOP**. `fit()` now returns one unified `Model` with `.report()`, `.evaluate()`, `.explain()`, `.card()`, `.export()`, `.deploy()`, and conformal `.predict_interval()` / `.predict_set()`. Ships `py.typed`; AI agents get the same verdict over MCP. See the [changelog](CHANGELOG.md).
+
 ```python
 from breezeml import datasets, fit, predict
 
