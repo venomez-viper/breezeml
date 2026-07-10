@@ -37,6 +37,24 @@ class EasyModel:
     def predict(self, X):
         return self.pipeline.predict(X)
 
+    def evaluate(self, df, target=None):
+        """Cross-validated performance of this model on ``df`` (metrics dict)."""
+        from .report import _performance
+        tgt = target or self.target
+        X = df.drop(columns=[tgt])
+        y = df[tgt]
+        return _performance(self, X, y, self.task)["metrics"]
+
+    def report(self, df, target=None, sensitive=None, show=True):
+        """Run the full honesty gauntlet on this model - one SHIP/WARN/STOP report."""
+        from .report import report as _report
+        return _report(self, df, target=target, sensitive=sensitive, show=show)
+
+    def explain(self, df, target=None, show=True):
+        """Plain-English feature importances via permutation importance."""
+        from .explain import permutation_importance as _pi
+        return _pi(self, df, target or self.target, show=show)
+
     def save(self, path):
         joblib.dump(self, path)
 
