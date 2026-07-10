@@ -128,6 +128,20 @@ def tool_explain(model_id: str) -> str:
     return json.dumps({"decisions": narrate(model.meta)}, indent=2)
 
 
+def tool_report(model_id: str, csv_path: str, target: str = "", sensitive: str = "") -> str:
+    """Run the full honesty gauntlet on a trained model and return a single
+    SHIP / WARN / STOP verdict: cross-validated performance vs a naive baseline,
+    data audit (leakage/quality), class-imbalance severity, and an optional
+    fairness check. Agents SHOULD call this and confirm a SHIP verdict before
+    calling deploy() or export()."""
+    from .report import report as _report
+
+    model = _get(model_id)
+    df = _load_df(csv_path)
+    rep = _report(model, df, target=target or None, sensitive=sensitive or None, show=False)
+    return json.dumps(rep.to_dict(), indent=2, default=str)
+
+
 def tool_model_card(model_id: str, path: str = "") -> str:
     """Generate a markdown model card. Optionally write it to a file."""
     from .card import card
@@ -191,6 +205,7 @@ def build_server():
     server.tool(name="compare")(tool_compare)
     server.tool(name="predict")(tool_predict)
     server.tool(name="explain")(tool_explain)
+    server.tool(name="report")(tool_report)
     server.tool(name="model_card")(tool_model_card)
     server.tool(name="export")(tool_export)
     server.tool(name="deploy")(tool_deploy)
