@@ -295,6 +295,22 @@ class datasets:
         return data.frame.copy()
 
     @staticmethod
+    def mnist_mini():
+        data = skdatasets.load_digits(as_frame=True)
+        df = data.frame.copy()
+        df.rename(columns={"target": "digit"}, inplace=True)
+        return df
+
+    @staticmethod
+    def titanic():
+        try:
+            import seaborn as sns
+        except ImportError as exc:
+            raise ImportError("Install seaborn to use datasets.titanic(): pip install seaborn") from exc
+        df = sns.load_dataset("titanic").dropna().reset_index(drop=True)
+        return df
+
+    @staticmethod
     def penguins():
         try:
             import seaborn as sns

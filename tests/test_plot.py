@@ -15,6 +15,14 @@ def test_pr_curve_binary():
     plot.pr_curve(model, X_test, y_test)
 
 
+def test_residuals_regression():
+    df = datasets.diabetes()
+    model = fit(df, "target")
+    X_test = df.drop(columns=["target"])
+    y_test = df["target"]
+    plot.residuals(model, X_test, y_test)
+
+
 def test_pr_curve_multiclass_raises():
     import io
     import contextlib

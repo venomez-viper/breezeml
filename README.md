@@ -986,7 +986,9 @@ print(res["labels"][:10])
 | `datasets.breast_cancer()` | sklearn | `label` | Classification |
 | `datasets.diabetes()` | sklearn | `target` | Regression |
 | `datasets.california_housing()` | sklearn | `MedHouseVal` | Regression |
+| `datasets.mnist_mini()` | sklearn | `digit` | Classification |
 | `datasets.penguins()` | seaborn | `species` | Classification |
+| `datasets.titanic()` | seaborn | `survived` | Classification |
 | `datasets.from_url(url)` | CSV URL | user-defined | Mixed |
 
 ---

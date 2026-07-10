@@ -31,6 +31,22 @@ def test_auto_regression():
     assert "r2" in rep
     assert "rmse" in rep
 
+def test_mnist_mini():
+    df = datasets.mnist_mini()
+    assert "digit" in df.columns
+    assert len(df) == 1797
+    assert df["digit"].nunique() == 10
+
+
+def test_titanic():
+    try:
+        df = datasets.titanic()
+    except ImportError:
+        return
+    assert "survived" in df.columns
+    assert len(df) > 0
+
+
 def test_report():
     df = datasets.iris()
     model = fit(df, "species")
