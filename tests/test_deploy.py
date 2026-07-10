@@ -78,6 +78,35 @@ def test_deploy_method_on_easymodel(tmp_path, iris_model):
     iris_model.deploy(str(out))
     assert (out / "app.py").exists()
 
+def test_deploy_compose_writes_docker_compose_file(tmp_path, iris_model):
+    out = tmp_path / "api"
+    breezeml.deploy(iris_model, str(out), name="iris-api", compose=True)
+    assert (out / "docker-compose.yml").exists()
+
+
+def test_deploy_without_compose_skips_file(tmp_path, iris_model):
+    out = tmp_path / "api"
+    breezeml.deploy(iris_model, str(out))
+    assert not (out / "docker-compose.yml").exists()
+
+
+def test_deploy_compose_file_is_valid_yaml_and_uses_port(tmp_path, iris_model):
+    yaml = pytest.importorskip("yaml")
+    out = tmp_path / "api"
+    breezeml.deploy(iris_model, str(out), name="iris-api", compose=True, port=9000)
+    content = (out / "docker-compose.yml").read_text(encoding="utf-8")
+    parsed = yaml.safe_load(content)
+    service = parsed["services"]["iris-api"]
+    assert service["build"] == "."
+    assert "9000:8000" in service["ports"]
+
+
+def test_deploy_compose_readme_mentions_compose(tmp_path, iris_model):
+    out = tmp_path / "api"
+    breezeml.deploy(iris_model, str(out), compose=True)
+    readme = (out / "README.md").read_text(encoding="utf-8")
+    assert "docker compose up" in readme
+
 
 def test_onnx_requires_extra_or_works(iris_model):
     # iris via core API is numeric-only, so this either works (skl2onnx
