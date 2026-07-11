@@ -165,6 +165,13 @@ COPY model.joblib app.py reference.jso[n] ./
 EXPOSE 8000
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 """
+_COMPOSE_TEMPLATE = """services:
+  {service_name}:
+    build: .
+    ports:
+      - "{host_port}:8000"
+    restart: unless-stopped
+"""
 
 _REQUIREMENTS = """fastapi>=0.100
 uvicorn>=0.23
@@ -190,7 +197,7 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 docker build -t {docker_tag} .
 docker run -p 8000:8000 {docker_tag}
 ```
-
+{compose_section}
 ## Predict
 
 ```bash
@@ -216,7 +223,13 @@ def _example_payload(columns: list[str]) -> str:
     return f"[{{{record}}}]"
 
 
-def deploy(model, out_dir: str = "deployment", name: str = "breezeml-model") -> str:
+def deploy(
+    model,
+    out_dir: str = "deployment",
+    name: str = "breezeml-model",
+    compose: bool = False,
+    port: int = 8000,
+) -> str:
     """Write a complete FastAPI + Docker serving directory for a trained model.
 
     Parameters
@@ -227,6 +240,12 @@ def deploy(model, out_dir: str = "deployment", name: str = "breezeml-model") -> 
         Directory to create (files are overwritten if present).
     name : str
         App title / docker tag stem.
+    compose : bool
+        If True, also write a ``docker-compose.yml`` next to the Dockerfile
+        so the service can be started with ``docker compose up``.
+    port : int
+        Host port to publish when ``compose=True`` (container always
+        listens on 8000 internally).
 
     Returns
     -------
@@ -265,16 +284,39 @@ def deploy(model, out_dir: str = "deployment", name: str = "breezeml-model") -> 
     with open(os.path.join(out_dir, "Dockerfile"), "w", encoding="utf-8") as fh:
         fh.write(_DOCKERFILE)
 
+    service_name = name.lower().replace(" ", "-")
+    compose_section = ""
+    if compose:
+        compose_yaml = _COMPOSE_TEMPLATE.format(
+            service_name=service_name,
+            host_port=port,
+        )
+        with open(os.path.join(out_dir, "docker-compose.yml"), "w", encoding="utf-8") as fh:
+            fh.write(compose_yaml)
+        compose_section = f"""
+## Run with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+The API will be available at http://localhost:{port}.
+"""
+
     readme = _README_TEMPLATE.format(
         title=name,
-        docker_tag=name.lower().replace(" ", "-"),
+        docker_tag=service_name,
+        compose_section=compose_section,
         example_payload=_example_payload(columns),
     )
     with open(os.path.join(out_dir, "README.md"), "w", encoding="utf-8") as fh:
         fh.write(readme)
 
     print(f"Deployment written to '{out_dir}/'")
-    print(f"  Run: cd {out_dir} && pip install -r requirements.txt && uvicorn app:app")
+    if compose:
+        print(f"  Run: cd {out_dir} && docker compose up --build")
+    else:
+        print(f"  Run: cd {out_dir} && pip install -r requirements.txt && uvicorn app:app")
     return out_dir
 
 
