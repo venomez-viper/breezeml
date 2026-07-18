@@ -1,106 +1,127 @@
-# Launch Kit (v1.0.0)
+# Launch Kit (v2.0)
 
-Copy-paste drafts for announcing the release. Post from your own accounts.
+Copy-paste drafts for announcing BreezeML 2.0. Post from your own accounts.
+Post the HN one first; Reddit needs an aged account with some karma.
 
 ---
 
 ## Show HN (news.ycombinator.com/submit)
 
 **Title:**
-Show HN: BreezeML 1.0 - sklearn without boilerplate, 4 deps, zero lock-in, MCP built in
+Show HN: BreezeML - ML that refuses to ship a model that can't beat a coin flip
 
 **URL:** https://github.com/venomez-viper/breezeml
 
 **First comment (post immediately after submitting):**
 
-I built BreezeML because every "low-code ML" library I tried either broke my
-environment (PyCaret pulls in hundreds of packages) or stopped at a toy
-leaderboard (LazyPredict gives you rankings but no pipeline).
+I built BreezeML after watching the same failure mode over and over:
+someone trains a model, accuracy looks great, and nobody checked it against
+a naive baseline or noticed the target leaked into a feature. Kapoor and
+Narayanan catalogued this exact problem across 294 published papers, so it
+is not a beginner-only mistake.
 
-v1.0 makes four promises:
+BreezeML is a workflow layer over scikit-learn where the honest path is the
+short path:
 
-1. 4 dependencies, always: core installs with only scikit-learn, pandas,
-   numpy, joblib. A CI test fails the build if anyone adds a fifth.
+    from breezeml import datasets, fit
+    model = fit(datasets.iris(), "species")   # leakage-safe, stratified, seeded
+    model.report()                            # SHIP / WARN / STOP
+
+report() runs cross-validated performance against a naive baseline, a
+leakage audit, imbalance checks, and optional fairness, then gives one
+verdict. Train on shuffled labels and it says STOP, every time (we tested).
+
+Other promises:
+
+1. 4 dependencies, always: sklearn, pandas, numpy, joblib. A CI test fails
+   the build if anyone adds a fifth.
 2. Zero lock-in: export() writes a standalone sklearn script reproducing
-   your exact pipeline - imputers, encoder, seed, split - with no breezeml
-   import. You can graduate anytime.
-3. It teaches: explain_decisions=True narrates every pipeline choice in
-   plain English, computed from your actual data (imbalance ratios, missing
-   percentages, IQR outlier checks). card() writes an honest model card
-   with auto-detected caveats.
-4. AI agents can use it: breezeml-mcp is a built-in MCP server, so Claude
-   and other agents get stratified splits and leakage-safe pipelines
-   instead of hand-rolling sklearn.
+   your exact pipeline, no breezeml import. Graduate anytime.
+3. AI agents get the same guardrails: a built-in MCP server exposes the
+   verdict as JSON, and agents are told to confirm SHIP before deploy().
 
-Honest benchmarks against PyCaret and LazyPredict (including where they
-win) are in the docs. Happy to answer anything.
+The part I'd most like feedback on: we published an empirical validation of
+our own guardrails (docs/validation.md). The first run caught a real blind
+spot in our leakage detector - a depth-bounded probe tree cannot express a
+copy of a continuous target - which we fixed and regression-tested. Numbers,
+limitations, and the false-positive tradeoff are all in the doc.
+
+Happy to answer anything, including where competing tools beat us
+(LazyPredict's leaderboard is faster; it's in our benchmarks).
 
 ---
 
-## r/MachineLearning (flair: Project)
+## r/MachineLearning (flair: Project, [P] tag)
 
 **Title:**
-[P] BreezeML 1.0: a 4-dependency sklearn wrapper with zero lock-in export, self-explaining pipelines, and an MCP server for AI agents
+[P] BreezeML 2.0: sklearn workflow layer that gives every model a SHIP/WARN/STOP verdict (and we validated the guardrails empirically)
 
 **Body:**
 
-Open source (MIT), pip install breezeml.
+Open source (MIT), pip install breezeml. 4 core dependencies, CI-enforced.
 
-The pitch in one block:
+The core idea: leakage-safe defaults plus one honest gate.
 
-    import breezeml
-    df = breezeml.datasets.iris()
-    model, report = breezeml.auto(df, "species", explain_decisions=True)
-    breezeml.card(model, "MODEL_CARD.md")   # honest model card
-    breezeml.export(model, "train.py")      # pure-sklearn script, no breezeml import
-    breezeml.deploy(model, "api/")          # FastAPI + Dockerfile
+    from breezeml import fit
+    model = fit(df, "target")     # stratified, seeded, leakage-safe
+    model.report()                # SHIP / WARN / STOP with reasons
 
-What I think is actually novel:
+report() = cross-validated score vs a mandatory naive baseline + a
+single-feature leakage audit + imbalance severity + optional fairness
+(four-fifths rule). One critical finding = STOP.
 
-- **The dependency contract.** Core needs only sklearn/pandas/numpy/joblib
-  and a CI test fails if anyone adds a fifth hard dependency. This is a
-  direct response to the PyCaret dependency-hell experience.
-- **export() as an anti-lock-in feature.** It generates a standalone
-  sklearn training script reproducing the exact pipeline. Most libraries
-  have every incentive not to build this.
-- **Teaching narration.** Explanations are computed from measured data
-  facts (class imbalance ratio, missing cell percentage, IQR outliers),
-  not canned strings.
-- **MCP server.** breezeml-mcp exposes train/compare/explain/export/deploy
-  as tools, so agents get statistically sound defaults.
+What I think is worth your attention:
 
-Benchmarks vs PyCaret and LazyPredict (with the caveats stated, including
-where LazyPredict is faster): see docs/benchmarks.md in the repo.
+- **We validated our own claims** (docs/validation.md): on 10 datasets,
+  injected target copies are detected 10/10 with 0 false positives on
+  clean data; conformal intervals hit 0.88-0.94 empirical coverage at
+  nominal 90%; label-shuffled models get STOP 6/6, real models SHIP 6/6.
+  The first run of the study exposed a real bug in our leakage probe
+  (bounded-depth trees can't express a continuous target copy), which is
+  now fixed and regression-tested. Limitations are documented, including
+  what we deliberately don't flag and why.
+- **Zero lock-in.** export() generates a standalone sklearn training
+  script with no breezeml import.
+- **Agent guardrails.** The MCP server returns the verdict as structured
+  JSON and instructs agents to confirm SHIP before deploy/export. If you
+  are building data-science agents, this is a concrete mechanism against
+  silent statistical misuse.
+- Also in the box on 4 deps: conformal prediction, significance tests
+  (McNemar, paired CV t-test), survival analysis, drift monitoring, causal
+  effect estimation.
 
-Feedback welcome - there are 10 "good first issue"s open if anyone wants
-to contribute.
+Benchmarks vs PyCaret and LazyPredict, with the places they win stated
+plainly: docs/benchmarks.md. Real-world case study (CMS Medicare fraud
+ranking, ROC-AUC 0.809 matching the published benchmark): docs/case-studies.md.
+
+Feedback and tear-downs welcome.
 
 ---
 
 ## X / LinkedIn thread
 
-1/ BreezeML 1.0 is out. Machine learning without the boilerplate - and
-without the dependency hell. 4 core deps (sklearn, pandas, numpy, joblib),
-enforced by CI. Forever.
+1/ BreezeML 2.0 is out. One call tells you if your model deserves to ship:
+model.report() returns SHIP, WARN, or STOP. Baseline check, leakage audit,
+imbalance, fairness. One verdict.
 
-2/ Most ML libraries lock you in. BreezeML has a "graduate anytime" button:
-export(model, "train.py") writes a standalone sklearn script reproducing
-your exact pipeline. Zero breezeml imports.
+2/ Train on shuffled labels? STOP, 6/6 datasets. Real signal? SHIP, 6/6.
+We published the validation study instead of asking you to trust us:
+github.com/venomez-viper/breezeml (docs/validation.md)
 
-3/ It teaches while it trains. explain_decisions=True narrates every
-choice: why a stratified split, why median imputation, why accuracy is
-misleading on your imbalanced classes. Computed from your data, not canned.
+3/ The study even caught a bug in our own leakage detector. A
+depth-bounded tree cannot recognize a copy of a continuous target. Fixed,
+regression-tested, documented. That is what "honest by default" costs.
 
-4/ One line to production: deploy(model, "api/") writes a FastAPI app +
-Dockerfile serving the raw sklearn pipeline. And card() writes an honest
-model card with auto-detected caveats.
+4/ Still 4 core dependencies (sklearn, pandas, numpy, joblib), enforced by
+a CI test that fails if anyone adds a fifth. Still zero lock-in:
+export() writes a pure-sklearn script you can walk away with.
 
-5/ The part I'm most excited about: breezeml-mcp. BreezeML is the first
-low-code ML library with a built-in MCP server. Claude and other AI agents
-can train, compare, explain, and deploy models with sound stats underneath.
+5/ And for AI agents: the built-in MCP server hands the SHIP/WARN/STOP
+verdict to Claude and friends as JSON, and tells them to confirm SHIP
+before deploying. Guardrails for agent-driven ML, not just humans.
 
 6/ pip install breezeml
-   Repo + honest benchmarks vs PyCaret/LazyPredict: github.com/venomez-viper/breezeml
+   Docs, benchmarks, validation, case study: github.com/venomez-viper/breezeml
 
 ---
 
@@ -113,14 +134,14 @@ Setup before recording:
 
 Shot list:
 1. (0:00) Terminal: type `claude`, then the prompt:
-   "Train a model on churn.csv predicting churn. Explain your
-   preprocessing choices, write a model card, and deploy it as an API."
-2. (0:10) Agent calls inspect_data -> show the JSON profile appearing.
-3. (0:25) Agent calls compare -> leaderboard of 12+ models.
-4. (0:40) Agent calls train -> metrics + the plain-English decisions list.
-   Zoom on the narration for 3 seconds.
-5. (0:55) Agent calls model_card -> open MODEL_CARD.md, scroll caveats.
-6. (1:10) Agent calls deploy -> cd api && uvicorn app:app, then curl
-   /predict with one record. Show the prediction JSON.
-7. (1:25) Close card: "DataFrame to deployed, explained model. One prompt.
-   pip install breezeml"
+   "Train a model on churn.csv predicting churn, check whether it is
+   actually safe to ship, and if the report says SHIP, deploy it."
+2. (0:10) Agent calls inspect_data -> JSON profile appears.
+3. (0:20) Agent calls compare -> leaderboard of 20+ models.
+4. (0:35) Agent calls train -> metrics + plain-English decisions.
+5. (0:50) Agent calls report -> zoom on the SHIP/WARN/STOP verdict JSON
+   for 3 seconds. This is the money shot.
+6. (1:05) Agent confirms SHIP, calls deploy -> cd api && uvicorn app:app,
+   curl /predict with one record, prediction JSON on screen.
+7. (1:20) Close card: "The agent had to prove the model beats a baseline
+   before it was allowed to deploy. pip install breezeml"
