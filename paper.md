@@ -67,7 +67,7 @@ BreezeML is early-stage but in active use: it is distributed on PyPI, where it r
 
 # AI usage disclosure
 
-Generative AI (Claude, Anthropic; used via the Claude Code development environment) assisted in this project: as a coding assistant during the development of parts of the BreezeML codebase, documentation, and tests, and in drafting this manuscript. All architectural and API design decisions, the benchmark methodology and measurements, and the final content of the code, documentation, and this paper were reviewed, modified where needed, and validated by the author, who takes full responsibility for the accuracy, originality, and licensing compliance of all submitted materials.
+BreezeML was designed and developed by the author, who conceived the library, its architecture, its API, its statistical-honesty design principles, and its benchmark methodology. Generative AI (Claude, Anthropic; used via the Claude Code development environment) was used as a development assistant: helping implement portions of the codebase, documentation, and tests under the author's direction, and assisting with drafting and editing this manuscript. All AI-assisted content was reviewed, modified where needed, and validated by the author, who takes full responsibility for the accuracy, originality, and licensing compliance of all submitted materials.
 
 # Acknowledgements
 
