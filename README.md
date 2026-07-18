@@ -1130,6 +1130,20 @@ All pull requests should:
 
 ---
 
+## Support and Community
+
+- **Questions and usage help:** [GitHub Discussions](https://github.com/venomez-viper/breezeml/discussions) (Q&A category)
+- **Bug reports:** [GitHub Issues](https://github.com/venomez-viper/breezeml/issues)
+- **Feature ideas:** [GitHub Discussions](https://github.com/venomez-viper/breezeml/discussions) (Ideas category)
+
+---
+
+## Citing BreezeML
+
+If you use BreezeML in your work, please cite it via the repository's [CITATION.cff](CITATION.cff) (GitHub's "Cite this repository" button).
+
+---
+
 ## License
 
 MIT © 2025 **Akash Anipakalu Giridhar**

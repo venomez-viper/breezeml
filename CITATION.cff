@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use BreezeML in your work, please cite it as below."
+type: software
+title: "BreezeML: a production-aware machine learning workflow layer with statistical honesty by default"
+authors:
+  - family-names: "Anipakalu Giridhar"
+    given-names: "Akash"
+    orcid: "https://orcid.org/0009-0007-4162-7159"
+version: 2.0.0
+date-released: 2026-07-10
+license: MIT
+repository-code: "https://github.com/venomez-viper/breezeml"
+url: "https://breezeml.org"
+keywords:
+  - machine learning
+  - scikit-learn
+  - automl
+  - reproducibility
+  - education
+  - model cards
+  - AI agents
