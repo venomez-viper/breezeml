@@ -52,6 +52,43 @@ def test_audit_catches_id_and_leakage():
     assert any(leak["column"] == "leaky" for leak in result["leak_details"])
 
 
+def test_audit_catches_regression_target_copy():
+    # a copy of a continuous target must be flagged; the shallow-tree probe
+    # alone misses this (staircase R2 < threshold), the rank-correlation
+    # fast path catches it (found by benchmarks/validation_study.py)
+    rng = np.random.default_rng(0)
+    n = 400
+    y = rng.normal(50, 10, n)
+    df = pd.DataFrame({
+        "feature": rng.normal(0, 1, n),
+        "leaky_copy": y,
+        "leaky_monotone": np.exp(y / 20),  # monotone transform of target
+        "target": y,
+    })
+    result = breezeml.audit(df, "target", show=False)
+    cats = {f["category"] for f in result["findings"]}
+    assert "target_leakage" in cats
+    leaked = {leak["column"] for leak in result["leak_details"]}
+    assert "leaky_copy" in leaked
+    assert "leaky_monotone" in leaked
+
+
+def test_audit_catches_many_class_target_copy():
+    # 10+ classes exceed a depth-3 tree's 8 leaves; probe depth must scale
+    # with class count (found by benchmarks/validation_study.py)
+    rng = np.random.default_rng(0)
+    n = 500
+    y = rng.integers(0, 10, n)
+    df = pd.DataFrame({
+        "feature": rng.normal(0, 1, n),
+        "leaky_copy": y,
+        "target": y.astype(str),
+    })
+    result = breezeml.audit(df, "target", show=False)
+    cats = {f["category"] for f in result["findings"]}
+    assert "target_leakage" in cats
+
+
 def test_contamination_detects_overlap():
     df = datasets.iris()
     train, test = df.iloc[:120], df.iloc[100:]  # rows 100-119 shared

@@ -58,6 +58,8 @@ nav:
       - AutoFeat (enrich without leaking): guides/autofeat.md
       - Causal (correlation vs causation): guides/causal.md
   - Benchmarks: benchmarks.md
+  - Validation: validation.md
+  - Case Studies: case-studies.md
   - API Reference:
       - Core: api/core.md
       - Classifiers: api/classifiers.md

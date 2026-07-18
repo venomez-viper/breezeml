@@ -1,0 +1,196 @@
+{
+  "leakage_detection": [
+    {
+      "dataset": "iris",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "wine",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "breast_cancer",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "digits_800",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "synth_clf_0",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "synth_clf_1",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "diabetes",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "synth_reg_0",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "synth_reg_1",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    },
+    {
+      "dataset": "friedman1",
+      "clean_false_positive": false,
+      "direct_copy_detected": true,
+      "noisy_copy_detected": false,
+      "id_column_detected": true
+    }
+  ],
+  "conformal_coverage": [
+    {
+      "dataset": "diabetes",
+      "task": "regression",
+      "nominal": 0.9,
+      "mean_coverage": 0.9056,
+      "std": 0.022
+    },
+    {
+      "dataset": "synth_reg_0",
+      "task": "regression",
+      "nominal": 0.9,
+      "mean_coverage": 0.918,
+      "std": 0.0382
+    },
+    {
+      "dataset": "synth_reg_1",
+      "task": "regression",
+      "nominal": 0.9,
+      "mean_coverage": 0.9073,
+      "std": 0.0152
+    },
+    {
+      "dataset": "friedman1",
+      "task": "regression",
+      "nominal": 0.9,
+      "mean_coverage": 0.915,
+      "std": 0.015
+    },
+    {
+      "dataset": "iris",
+      "task": "classification",
+      "nominal": 0.9,
+      "mean_coverage": 0.88,
+      "std": 0.0452
+    },
+    {
+      "dataset": "wine",
+      "task": "classification",
+      "nominal": 0.9,
+      "mean_coverage": 0.9444,
+      "std": 0.0248
+    },
+    {
+      "dataset": "breast_cancer",
+      "task": "classification",
+      "nominal": 0.9,
+      "mean_coverage": 0.8947,
+      "std": 0.0192
+    },
+    {
+      "dataset": "digits_800",
+      "task": "classification",
+      "nominal": 0.9,
+      "mean_coverage": 0.9187,
+      "std": 0.0403
+    },
+    {
+      "dataset": "synth_clf_0",
+      "task": "classification",
+      "nominal": 0.9,
+      "mean_coverage": 0.918,
+      "std": 0.0196
+    },
+    {
+      "dataset": "synth_clf_1",
+      "task": "classification",
+      "nominal": 0.9,
+      "mean_coverage": 0.9007,
+      "std": 0.0269
+    }
+  ],
+  "verdict_sanity": [
+    {
+      "dataset": "iris",
+      "clean_verdict": "SHIP",
+      "shuffled_verdict": "STOP",
+      "gate_correct": true
+    },
+    {
+      "dataset": "wine",
+      "clean_verdict": "SHIP",
+      "shuffled_verdict": "STOP",
+      "gate_correct": true
+    },
+    {
+      "dataset": "breast_cancer",
+      "clean_verdict": "SHIP",
+      "shuffled_verdict": "STOP",
+      "gate_correct": true
+    },
+    {
+      "dataset": "digits_800",
+      "clean_verdict": "SHIP",
+      "shuffled_verdict": "STOP",
+      "gate_correct": true
+    },
+    {
+      "dataset": "synth_clf_0",
+      "clean_verdict": "SHIP",
+      "shuffled_verdict": "STOP",
+      "gate_correct": true
+    },
+    {
+      "dataset": "synth_clf_1",
+      "clean_verdict": "SHIP",
+      "shuffled_verdict": "STOP",
+      "gate_correct": true
+    }
+  ],
+  "meta": {
+    "breezeml_version": "2.0.0",
+    "alpha": 0.1,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "runtime_seconds": 99.1
+  }
+}

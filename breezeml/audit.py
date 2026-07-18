@@ -54,11 +54,22 @@ def _leakage_probe(X_col: pd.Series, y: pd.Series, task: str) -> float | None:
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+            # depth is deliberately unlimited: a bounded tree cannot express
+            # a leaked copy of a many-valued target (greedy splits peel one
+            # level at a time), while cross-validation still keeps honest
+            # noise features far below the threshold. min_samples_leaf stops
+            # pure memorization.
             if task == "classification":
-                model = DecisionTreeClassifier(max_depth=3, random_state=42)
+                model = DecisionTreeClassifier(min_samples_leaf=5, random_state=42)
                 scores = cross_val_score(model, feats, target, cv=3, scoring="accuracy")
             else:
-                model = DecisionTreeRegressor(max_depth=3, random_state=42)
+                # rank-correlation fast path: an (almost) exact or monotone
+                # copy of a continuous target rank-correlates ~1
+                if pd.api.types.is_numeric_dtype(target):
+                    rho = feats["f"].corr(target, method="spearman")
+                    if pd.notna(rho) and abs(rho) >= 0.995:
+                        return 1.0
+                model = DecisionTreeRegressor(min_samples_leaf=5, random_state=42)
                 scores = cross_val_score(model, feats, target, cv=3, scoring="r2")
         return float(scores.mean())
     except Exception:

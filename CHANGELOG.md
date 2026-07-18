@@ -5,6 +5,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Se
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Empirical validation study** (`benchmarks/validation_study.py`, `docs/validation.md`): measures the guardrail claims on 10 datasets - `audit()` leakage detection rates (with false-positive checks), conformal empirical coverage vs the nominal 90% guarantee, and SHIP/WARN/STOP verdict correctness on real vs label-shuffled models. Results in `benchmarks/validation_results.json`.
+- **Case studies page** (`docs/case-studies.md`): BreezeML applied in a real CMS Medicare Part B provider-fraud study.
+- `CITATION.cff` so GitHub's "Cite this repository" button works.
+
+### Fixed
+- **`audit()` leakage probe blind spots** (found by the validation study): a direct copy of a continuous regression target and a copy of a many-class (10+) target were not flagged, because a depth-bounded probe tree cannot express them. The probe now uses an unbounded tree with a leaf-size floor plus a Spearman rank-correlation fast path for regression targets; direct-copy detection went from 5/10 to 10/10 datasets with zero false positives on clean data. Covered by new regression tests.
+
+---
+
 ## [2.0.0] - 2026-07-10
 
 Honest by default, agent-native by design. 2.0 consolidates the scattered honesty toolkit into one verdict, unifies the model object, ships types, and puts the flagship report in the hands of AI agents.
