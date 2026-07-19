@@ -1,0 +1,145 @@
+{
+  "title": "BreezeML Playground: Honest ML Datasets",
+  "subtitle": "9 synthetic datasets with planted traps: leakage, bias, drift, confounding",
+  "description": "# BreezeML Playground\n\nNine fully synthetic datasets for learning **honest machine learning**. No real people, no privacy concerns, no license restrictions. Every file is generated deterministically by the included `generate_data.py` (seed 7), so every pattern, trap, and bias was planted on purpose and can be inspected in the code that planted it.\n\nEach dataset teaches one thing that quietly breaks real ML projects:\n\n| File | Task | The lesson planted inside |\n|---|---|---|\n| `churn.csv` | classification | clean baseline dataset, 12% churn |\n| `churn_raw.csv` | classification | an ID column and a post-outcome leakage column, find them |\n| `churn_next_quarter.csv` | scoring batch | three columns drifted: prices rose, behavior changed, new contract type |\n| `house_prices.csv` | regression | heteroscedastic noise, ideal for conformal prediction intervals |\n| `store_sales.csv` | time series | trend, weekly and yearly seasonality, promo spikes |\n| `loan_approvals.csv` | classification | an approval bias against one group, measurable with the four-fifths rule |\n| `patient_survival.csv` | survival | censored durations, two treatment groups with a real difference |\n| `ab_campaign.csv` | causal | confounded treatment: naive uplift reads ~18, the true effect is ~12 |\n| `customer_segments.csv` | clustering | four latent customer types plus 2% planted anomalies |\n\n## The companion notebook series\n\nEach file has a notebook that teaches its lesson, beginner-friendly, everything explained:\n\n1. [Find the Leak Before It Finds You](https://www.kaggle.com/code/venomezviper/find-the-leak-before-it-finds-you)\n2. [When Accuracy Lies: Imbalanced Classes](https://www.kaggle.com/code/venomezviper/when-accuracy-lies-imbalanced-classes)\n3. [Your Model Will Rot: Catching Drift](https://www.kaggle.com/code/venomezviper/your-model-will-rot-catching-drift)\n4. [AutoML on a Budget](https://www.kaggle.com/code/venomezviper/automl-on-a-budget-honest-search-in-60-seconds)\n5. [Uncertainty You Can Trust: Conformal Prediction](https://www.kaggle.com/code/venomezviper/uncertainty-you-can-trust-conformal-prediction)\n6. [Is Your Model Fair? The Four-Fifths Rule](https://www.kaggle.com/code/venomezviper/is-your-model-fair-the-four-fifths-rule)\n7. [When Will It Happen? Survival Analysis Basics](https://www.kaggle.com/code/venomezviper/when-will-it-happen-survival-analysis-basics)\n8. [The Campaign That Lied: Correlation vs Causation](https://www.kaggle.com/code/venomezviper/the-campaign-that-lied-correlation-vs-causation)\n9. [Finding Groups and Oddballs in Your Data](https://www.kaggle.com/code/venomezviper/finding-groups-and-oddballs-in-your-data)\n10. [Honest Forecasting: Beat Naive or Admit It](https://www.kaggle.com/code/venomezviper/honest-forecasting-beat-naive-or-admit-it)\n\nNew to ML entirely? Start with [Your First ML Model, Explained Simply](https://www.kaggle.com/code/venomezviper/your-first-ml-model-explained-simply).\n\n## About BreezeML\n\nBuilt as companion data for [BreezeML](https://github.com/venomez-viper/breezeml), an open-source (MIT) scikit-learn workflow layer where every model gets an honest SHIP / WARN / STOP verdict: baseline check, leakage audit, imbalance, fairness. Core installs with 4 dependencies. `pip install breezeml`\n\n## Provenance\n\nGenerated with numpy and pandas only; the full generator ships in this dataset as `generate_data.py`. Regenerate or modify: `python generate_data.py [outdir]`. License: CC0 (public domain).",
+  "id": "venomezviper/breezeml-playground",
+  "licenses": [{"name": "CC0-1.0"}],
+  "keywords": ["beginner", "tabular", "classification", "regression", "clustering"],
+  "resources": [
+    {
+      "path": "churn.csv",
+      "description": "Clean telecom customer churn, 5,000 rows, 12% positive rate. The baseline dataset for classification, imbalance, and drift lessons.",
+      "schema": {
+        "fields": [
+          {"name": "tenure_months", "description": "Months as a customer (1-72)", "type": "integer"},
+          {"name": "monthly_charges", "description": "Current monthly bill in dollars", "type": "number"},
+          {"name": "support_tickets", "description": "Support tickets filed in the last year", "type": "integer"},
+          {"name": "contract_type", "description": "monthly, one_year, or two_year", "type": "string"},
+          {"name": "payment_method", "description": "card, bank_transfer, or check", "type": "string"},
+          {"name": "days_since_login", "description": "Days since the customer last logged in", "type": "integer"},
+          {"name": "churned", "description": "Target: 1 if the customer cancelled, else 0", "type": "integer"}
+        ]
+      }
+    },
+    {
+      "path": "churn_raw.csv",
+      "description": "The same churn data 'straight from the warehouse', with two planted traps: an ID column and a post-outcome leakage column. Used by the leakage notebook. Run an audit before trusting any score on this file.",
+      "schema": {
+        "fields": [
+          {"name": "customer_id", "description": "TRAP: row identifier, models memorize it", "type": "integer"},
+          {"name": "tenure_months", "description": "Months as a customer", "type": "integer"},
+          {"name": "monthly_charges", "description": "Current monthly bill in dollars", "type": "number"},
+          {"name": "support_tickets", "description": "Support tickets filed in the last year", "type": "integer"},
+          {"name": "contract_type", "description": "monthly, one_year, or two_year", "type": "string"},
+          {"name": "payment_method", "description": "card, bank_transfer, or check", "type": "string"},
+          {"name": "days_since_login", "description": "Days since last login", "type": "integer"},
+          {"name": "churned", "description": "Target: 1 if cancelled", "type": "integer"},
+          {"name": "days_until_cancellation", "description": "TRAP: only known for customers who already cancelled; cannot exist at prediction time (target leakage)", "type": "number"}
+        ]
+      }
+    },
+    {
+      "path": "churn_next_quarter.csv",
+      "description": "Next quarter's unlabeled scoring batch, 2,000 rows. Three columns drifted versus training: monthly_charges rose ~25%, days_since_login stretched, and a new 'flex' contract type appeared. Used by the drift notebook.",
+      "schema": {
+        "fields": [
+          {"name": "tenure_months", "description": "Months as a customer", "type": "integer"},
+          {"name": "monthly_charges", "description": "DRIFTED: ~25% price increase applied", "type": "number"},
+          {"name": "support_tickets", "description": "Support tickets filed in the last year", "type": "integer"},
+          {"name": "contract_type", "description": "DRIFTED: contains a new 'flex' category the model never saw", "type": "string"},
+          {"name": "payment_method", "description": "card, bank_transfer, or check", "type": "string"},
+          {"name": "days_since_login", "description": "DRIFTED: engagement dropped, values stretched ~60%", "type": "integer"}
+        ]
+      }
+    },
+    {
+      "path": "house_prices.csv",
+      "description": "4,000 house sales for regression. Noise is heteroscedastic (expensive houses are noisier), which makes it ideal for conformal prediction intervals and AutoML lessons.",
+      "schema": {
+        "fields": [
+          {"name": "sqft", "description": "Living area in square feet", "type": "integer"},
+          {"name": "bedrooms", "description": "Number of bedrooms", "type": "integer"},
+          {"name": "bathrooms", "description": "Number of bathrooms", "type": "number"},
+          {"name": "age_years", "description": "Age of the building in years", "type": "integer"},
+          {"name": "distance_center_km", "description": "Distance to the city center in km", "type": "number"},
+          {"name": "neighborhood_tier", "description": "standard, good, or premium", "type": "string"},
+          {"name": "garage", "description": "1 if the house has a garage", "type": "integer"},
+          {"name": "price", "description": "Target: sale price in dollars", "type": "number"}
+        ]
+      }
+    },
+    {
+      "path": "store_sales.csv",
+      "description": "Three years of daily store sales (2023-2025). Contains trend, weekly rhythm (busy weekends), yearly seasonality (holiday peak), and promo spikes. Used by the forecasting notebook.",
+      "schema": {
+        "fields": [
+          {"name": "date", "description": "Calendar date (YYYY-MM-DD)", "type": "string"},
+          {"name": "promo", "description": "1 if a promotion ran that day", "type": "integer"},
+          {"name": "sales", "description": "Target: units sold that day", "type": "integer"}
+        ]
+      }
+    },
+    {
+      "path": "loan_approvals.csv",
+      "description": "6,000 loan applications with a deliberately planted approval bias against one gender (the labels themselves are biased). Training without the gender column still fails the four-fifths rule, which is the lesson. Used by the fairness notebook.",
+      "schema": {
+        "fields": [
+          {"name": "income", "description": "Annual income in dollars", "type": "number"},
+          {"name": "credit_score", "description": "Credit score (300-850)", "type": "integer"},
+          {"name": "debt_ratio", "description": "Debt-to-income ratio (0-1)", "type": "number"},
+          {"name": "employment_years", "description": "Years in current employment", "type": "number"},
+          {"name": "loan_amount", "description": "Requested loan amount in dollars", "type": "number"},
+          {"name": "gender", "description": "Sensitive attribute: male or female. Bias against female applicants is planted in the labels", "type": "string"},
+          {"name": "approved", "description": "Target: 1 if the loan was approved (biased historical decisions)", "type": "integer"}
+        ]
+      }
+    },
+    {
+      "path": "patient_survival.csv",
+      "description": "2,000 patients in a two-arm trial with ~40% right-censoring. The new_drug arm genuinely delays the event (planted effect); a log-rank test recovers it. Used by the survival notebook.",
+      "schema": {
+        "fields": [
+          {"name": "group", "description": "Treatment arm: standard or new_drug", "type": "string"},
+          {"name": "age", "description": "Patient age in years", "type": "integer"},
+          {"name": "stage", "description": "Disease stage 1-4", "type": "integer"},
+          {"name": "duration_months", "description": "Observed time in months; a lower bound when event=0", "type": "number"},
+          {"name": "event", "description": "1 = event observed, 0 = censored (patient left the study event-free)", "type": "integer"}
+        ]
+      }
+    },
+    {
+      "path": "ab_campaign.csv",
+      "description": "8,000 customers, a marketing campaign with confounded targeting: engaged customers were more likely to receive it. Naive uplift reads ~$18.6; the true planted effect is ~$12. Used by the causal inference notebook.",
+      "schema": {
+        "fields": [
+          {"name": "age", "description": "Customer age", "type": "integer"},
+          {"name": "engagement_score", "description": "Pre-campaign engagement (0-1); also drives who got treated (the confounder)", "type": "number"},
+          {"name": "prior_purchases", "description": "Purchases before the campaign", "type": "integer"},
+          {"name": "treated", "description": "1 if the customer received the campaign (NOT randomized)", "type": "integer"},
+          {"name": "spend_next_month", "description": "Outcome: spend in dollars the following month", "type": "number"}
+        ]
+      }
+    },
+    {
+      "path": "customer_segments.csv",
+      "description": "3,010 customers' annual spend across five categories. Four latent behavioral segments (grocery-focused, social, travelers, tech) plus 2% planted anomalies: extreme uniform spenders. No labels; used by the clustering and anomaly notebook.",
+      "schema": {
+        "fields": [
+          {"name": "groceries", "description": "Annual grocery spend in dollars", "type": "number"},
+          {"name": "dining", "description": "Annual dining and going-out spend", "type": "number"},
+          {"name": "travel", "description": "Annual travel spend", "type": "number"},
+          {"name": "electronics", "description": "Annual electronics spend", "type": "number"},
+          {"name": "fashion", "description": "Annual fashion spend", "type": "number"}
+        ]
+      }
+    },
+    {
+      "path": "generate_data.py",
+      "description": "The full generator. Deterministic (numpy seed 7). Read it to see exactly how every trap, bias, and pattern was planted; run it to regenerate or modify the data."
+    },
+    {
+      "path": "README.md",
+      "description": "Overview of the playground: what each file teaches and how it connects to the notebook series."
+    }
+  ]
+}
