@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.venomez-viper/breezeml",
+  "description": "Train, compare, explain, and deploy scikit-learn models with statistical guardrails. Every model gets a SHIP/WARN/STOP honesty verdict (naive-baseline check, leakage audit, imbalance, fairness) as structured JSON; agents confirm SHIP before deploy.",
+  "repository": {
+    "url": "https://github.com/venomez-viper/breezeml",
+    "source": "github"
+  },
+  "version": "2.0.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "breezeml",
+      "version": "2.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

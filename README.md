@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.venomez-viper/breezeml -->
+
 <div align="center">
 
 <img src="https://raw.githubusercontent.com/venomez-viper/breezeml/main/assets/breezeml_banner_1778130992461.png" alt="BreezeML Banner" width="800"/>
