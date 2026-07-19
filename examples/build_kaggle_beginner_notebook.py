@@ -10,9 +10,13 @@ def _id():
     return f"cell-{_n[0]:02d}"
 
 
-md = lambda s: {"cell_type": "markdown", "id": _id(), "metadata": {}, "source": s}
-code = lambda s: {"cell_type": "code", "id": _id(), "metadata": {},
-                  "execution_count": None, "outputs": [], "source": s}
+def md(s):
+    return {"cell_type": "markdown", "id": _id(), "metadata": {}, "source": s}
+
+
+def code(s):
+    return {"cell_type": "code", "id": _id(), "metadata": {},
+            "execution_count": None, "outputs": [], "source": s}
 
 cells = [
     md("""# Your First Machine Learning Model, Explained Simply
