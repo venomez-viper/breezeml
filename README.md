@@ -22,6 +22,7 @@
 [![MCP Server](https://img.shields.io/badge/MCP-agent%20ready-blueviolet)](docs/guides/mcp.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/venomez-viper/breezeml/blob/main/examples/breezeml_quickstart.ipynb)
+[![Kaggle](https://img.shields.io/badge/Kaggle-playground%20%2B%2012%20notebooks-20BEFF?logo=kaggle&logoColor=white)](https://www.kaggle.com/datasets/venomezviper/breezeml-playground)
 [![scikit-learn](https://img.shields.io/badge/built%20on-scikit--learn-F7931E?logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 
 <br/>
@@ -1008,6 +1009,29 @@ All examples live in [`/examples`](examples/). You can also open the Colab quick
 | `test_regression.py` | Core regression pipeline |
 | `test_save_load.py` | Model persistence |
 | `test_v020_features.py` | Broader feature coverage from earlier releases |
+
+---
+
+## Learn on Kaggle
+
+The **[BreezeML Playground](https://www.kaggle.com/datasets/venomezviper/breezeml-playground)** is a synthetic dataset collection where every trap is planted on purpose: a hidden post-outcome leak, labels carrying bias, a confounded campaign, a batch that drifted after training. The generator script ships inside the dataset, so nothing is hidden.
+
+Twelve runnable notebooks teach one honest-ML lesson each:
+
+| Notebook | Lesson |
+|---|---|
+| [Your First ML Model, Explained Simply](https://www.kaggle.com/code/venomezviper/your-first-ml-model-explained-simply) | start here if you are new to ML |
+| [Honest ML on Titanic](https://www.kaggle.com/code/venomezviper/honest-ml-on-titanic-ship-warn-stop) | the honest report on the classic dataset |
+| [Find the Leak Before It Finds You](https://www.kaggle.com/code/venomezviper/find-the-leak-before-it-finds-you) | catching planted target leakage |
+| [When Accuracy Lies](https://www.kaggle.com/code/venomezviper/when-accuracy-lies-imbalanced-classes) | imbalanced classes, thresholds, cost tuning |
+| [Your Model Will Rot](https://www.kaggle.com/code/venomezviper/your-model-will-rot-catching-drift) | drift detection on a shifted batch |
+| [AutoML on a Budget](https://www.kaggle.com/code/venomezviper/automl-on-a-budget-honest-search-in-60-seconds) | honest model search in 60 seconds |
+| [Uncertainty You Can Trust](https://www.kaggle.com/code/venomezviper/uncertainty-you-can-trust-conformal-prediction) | conformal prediction intervals |
+| [Is Your Model Fair?](https://www.kaggle.com/code/venomezviper/is-your-model-fair-the-four-fifths-rule) | the four-fifths rule on biased labels |
+| [When Will It Happen?](https://www.kaggle.com/code/venomezviper/when-will-it-happen-survival-analysis-basics) | survival analysis with censoring |
+| [The Campaign That Lied](https://www.kaggle.com/code/venomezviper/the-campaign-that-lied-correlation-vs-causation) | correlation vs causation, confounding |
+| [Finding Groups and Oddballs](https://www.kaggle.com/code/venomezviper/finding-groups-and-oddballs-in-your-data) | clustering and anomaly consensus |
+| [Honest Forecasting](https://www.kaggle.com/code/venomezviper/honest-forecasting-beat-naive-or-admit-it) | walk-forward validation vs the naive baseline |
 
 ---
 
