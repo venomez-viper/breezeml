@@ -25,13 +25,19 @@ def code(s):
             "execution_count": None, "outputs": [], "source": s}
 
 
-LOADER = """import glob
-import pandas as pd
-import breezeml
+_LOAD_HELPER = '''
 
 def load(name):
-    \"\"\"Find a playground file wherever Kaggle mounts the dataset.\"\"\"
-    return pd.read_csv(glob.glob(f"/kaggle/input/**/{name}", recursive=True)[0])"""
+    """Find a playground file wherever Kaggle mounts the dataset."""
+    return pd.read_csv(glob.glob(f"/kaggle/input/**/{name}", recursive=True)[0])'''
+
+
+def loader(extra_imports=""):
+    """First code cell: imports (incl. any extras), then the load helper."""
+    imports = "import glob\nimport pandas as pd\nimport breezeml"
+    if extra_imports:
+        imports += "\n" + extra_imports.rstrip()
+    return imports + _LOAD_HELPER
 
 INSTALL = code("%pip install -q breezeml")
 
@@ -71,7 +77,7 @@ This notebook plants two classic leaks in a churn dataset and shows how a data a
             md("""## The data: customer churn, straight from the warehouse
 
 A telecom wants to predict which customers will cancel. Someone exported "everything we have" to a CSV. That phrase should already worry you."""),
-            code(LOADER + """
+            code(loader() + """
 
 df = load("churn_raw.csv")
 df.head()"""),
@@ -120,8 +126,7 @@ This notebook shows the trap on churn data, then three honest tools: a summary t
 
 *Turn Internet ON in the right sidebar.*"""),
             INSTALL,
-            code(LOADER + """
-from breezeml import imbalance
+            code(loader("from breezeml import imbalance") + """
 
 df = load("churn.csv")
 print("churn rate:", df["churned"].mean().round(3))"""),
@@ -170,8 +175,7 @@ This is **drift**, and this notebook shows how to catch it with one call, before
 *Turn Internet ON in the right sidebar.*"""),
             INSTALL,
             md("""## Train on this quarter"""),
-            code(LOADER + """
-from breezeml import drift
+            code(loader("from breezeml import drift") + """
 
 df = load("churn.csv")
 model = breezeml.fit(df, "churned")
@@ -198,6 +202,316 @@ The number doing the work is **PSI** (population stability index). The intuition
 - A green test-set score has an expiry date printed in invisible ink.
 - Check drift whenever a new scoring batch arrives, it costs one line.
 - New categories are the loudest drift signal: the model literally has no idea what `flex` is."""),
+            FOOTER,
+        ],
+    },
+    # ----------------------------------------------------------- 4: automl
+    "automl-budget": {
+        "title": "AutoML on a Budget: Honest Search in 60 Seconds",
+        "file": "nb4_automl_budget.ipynb",
+        "cells": [
+            md("""# AutoML on a Budget: Honest Search in 60 Seconds
+
+There are twenty reasonable models you could try on any tabular problem, and each has knobs. Trying them all by hand is a week of copy-paste. So most people try two, pick the better one, and move on with a quiet doubt.
+
+AutoML automates the search. The catch: automated search is automated opportunity to fool yourself. Search long enough and something scores well by luck. Honest AutoML has to guard against its own enthusiasm.
+
+This notebook searches for the best house-price model inside a fixed time budget, then explains how the honesty is enforced.
+
+*Turn Internet ON in the right sidebar.*"""),
+            INSTALL,
+            code(loader() + """
+
+df = load("house_prices.csv")
+df.head()"""),
+            md("""## One call, one budget
+
+Give it a time budget in seconds. It screens every built-in model with cross-validation, then spends what is left tuning the most promising ones."""),
+            code("""model, search = breezeml.automl(df, "price", time_budget=60)"""),
+            md("""What just happened, in order:
+
+1. **Screen.** Every candidate model got a quick cross-validated score. Cheap, wide look.
+2. **Tune.** The top few earned hyperparameter search with the remaining budget.
+3. **Honest final exam.** The winner was re-evaluated on a holdout slice it never touched during the search. This is the step that keeps the search honest: the score that picked the winner is not the score you get told.
+
+That third step matters because a long search quietly overfits the search itself. The model that won a hundred comparisons is partly good and partly lucky, and only a fresh holdout can tell you how much was luck.
+
+## Trust, then verify
+
+The search report says what won. The honest report says whether it deserves to ship:"""),
+            code("""report = model.report(df)"""),
+            md("""## What to remember
+
+- A time budget makes model search a decision, not a rabbit hole.
+- Any score that influenced a choice is contaminated as an estimate. Final numbers must come from data the search never saw.
+- AutoML picks the model. The verdict decides whether it ships. Keep those separate."""),
+            FOOTER,
+        ],
+    },
+    # -------------------------------------------------------- 5: conformal
+    "conformal-uncertainty": {
+        "title": "Uncertainty You Can Trust: Conformal Prediction",
+        "file": "nb5_conformal.ipynb",
+        "cells": [
+            md("""# Uncertainty You Can Trust: Conformal Prediction
+
+A model says a house is worth \\$412,300. Is it off by five thousand or by a hundred thousand? The point prediction refuses to say. Decisions need ranges, not points: bid confidently, or walk away.
+
+**Conformal prediction** turns any model's point predictions into ranges with a mathematical guarantee: at 90% target coverage, about 90% of true values will fall inside their range. No assumptions about the data being normal, no trust in the model being well behaved. The idea is thirty years old, rigorously proven, and strangely underused.
+
+*Turn Internet ON in the right sidebar.*"""),
+            INSTALL,
+            code(loader("from breezeml.conformal import conformal_regressor") + """
+
+df = load("house_prices.csv")
+
+n = len(df)
+train, calib, test = df[: int(.6 * n)], df[int(.6 * n): int(.8 * n)], df[int(.8 * n):]
+print(len(train), "train /", len(calib), "calibration /", len(test), "test rows")"""),
+            md("""Three slices instead of the usual two. The new one, **calibration**, is the whole trick, and the intuition is almost embarrassingly simple:
+
+*Watch the model make predictions on data it has not seen. Write down how wrong it usually is. Use the 90th percentile of those errors as the margin.*
+
+That is genuinely the entire idea. The math proves the margin then works on new data."""),
+            code("""model = breezeml.fit(train, "price")
+
+cp = conformal_regressor(model, calib, "price", alpha=0.1)   # alpha=0.1 -> 90% target
+intervals = cp.predict_interval(test.drop(columns=["price"]).head(5))
+intervals.round(0)"""),
+            md("""Every prediction now carries a `lower` and `upper` bound around the `point`. A wide interval is the model saying "I am not sure here," which is information the point prediction was hiding.
+
+## Verify the promise
+
+A guarantee you never check is a hope. Count how often the true price actually landed inside its interval:"""),
+            code("""coverage = cp.coverage_report(test, "price")"""),
+            md("""Within noise of 90%, as promised. Two honest caveats, because guarantees have fine print:
+
+- The guarantee is **marginal**: 90% on average over everything, not 90% for every kind of house separately. Expensive houses in this data are noisier, and their intervals can under-cover slightly while cheap houses over-cover.
+- It assumes new data resembles calibration data. If the market shifts, recalibrate (and see the drift notebook in this series for catching that).
+
+## What to remember
+
+- Point predictions hide uncertainty; decisions need ranges.
+- Conformal = measure your typical error on held-out data, use its 90th percentile as the margin. Guaranteed coverage, any model.
+- Always run `coverage_report` on fresh data. Trust arrives by checking."""),
+            FOOTER,
+        ],
+    },
+    # --------------------------------------------------------- 6: fairness
+    "model-fairness": {
+        "title": "Is Your Model Fair? The Four-Fifths Rule",
+        "file": "nb6_fairness.ipynb",
+        "cells": [
+            md("""# Is Your Model Fair? The Four-Fifths Rule
+
+A bank trains a loan-approval model. Nobody intends bias. The model never even sees the applicant's gender. And it still approves one group far less often than the other.
+
+How? A model learns from historical decisions. If those decisions carried bias, the model studies the bias along with everything else and reproduces it at scale, with a straight face and a good accuracy score.
+
+This notebook measures that, on synthetic loan data where we planted the bias ourselves so there is no ambiguity about the ground truth.
+
+*Turn Internet ON in the right sidebar.*"""),
+            INSTALL,
+            code(loader("from breezeml import fairness") + """
+
+df = load("loan_approvals.csv")
+df.groupby("gender")["approved"].mean().round(3)"""),
+            md("""The raw approval rates already differ. Now the common "fix": train the model **without** the gender column, so it cannot possibly discriminate. Right?"""),
+            code("""model = breezeml.fit(df.drop(columns=["gender"]), "approved")
+report = fairness.report(model, df, sensitive="gender")"""),
+            md("""The model never saw gender, and it still fails.
+
+The headline number is the **demographic parity ratio**: the disadvantaged group's approval rate divided by the advantaged group's. The threshold of 0.8 is the **four-fifths rule**, used by US regulators since 1978 as the line where disparate impact becomes presumptive: if one group is selected at less than 80% the rate of another, you have a problem to explain.
+
+Why didn't hiding the column work? Because the bias lives in the **labels**. The historical approvals this model studied were themselves skewed, so the model learned "applicants who look like this get approved less," reconstructing the pattern from perfectly innocent-looking features. Removing the protected column removes the evidence, not the behavior. This is the single most common fairness misconception in practice.
+
+## What you can actually do
+
+1. **Measure first, always.** You cannot manage what you refuse to look at. One line, every classification project with people in it.
+2. **Interrogate the labels.** If historical decisions were biased, more data and better models faithfully scale the bias.
+3. **Mitigate deliberately**: reweighting training data, per-group thresholds, or collecting less contaminated labels. Each has costs and tradeoffs, and each is a decision humans should make consciously, not a default.
+
+## What to remember
+
+- Deleting the sensitive column does not delete the bias. The labels remember.
+- The four-fifths rule gives you a regulator-grade line in the sand, computed in one call.
+- Fairness reporting will not fix your model. It makes the problem impossible to ignore, which is the honest first step."""),
+            FOOTER,
+        ],
+    },
+    # --------------------------------------------------------- 7: survival
+    "survival-basics": {
+        "title": "When Will It Happen? Survival Analysis Basics",
+        "file": "nb7_survival.ipynb",
+        "cells": [
+            md("""# When Will It Happen? Survival Analysis Basics
+
+A hospital trials a new drug. Some patients relapse at month 8, some at month 30, and some walk out of the study healthy at month 24 and are never seen again. Question: does the new drug delay relapse?
+
+Here is the trap. You cannot just average the relapse times, because for the patient who left healthy at month 24 you do not know the answer. Their true time is *at least* 24 months, maybe 80. This is called **censoring**, and it breaks ordinary statistics quietly: treat "at least 24" as "exactly 24" and you systematically underestimate everything.
+
+The same math applies far beyond medicine: time until a customer cancels, until a machine part fails, until a loan defaults. Whenever the clock is still running for some rows, you are doing survival analysis whether you know it or not.
+
+*Turn Internet ON in the right sidebar.*"""),
+            INSTALL,
+            code(loader("from breezeml import survival") + """
+
+df = load("patient_survival.csv")
+print(df["event"].value_counts())
+df.head()"""),
+            md("""`event` is the honest column: 1 means we observed the relapse, 0 means the patient left the study first, so their duration is only a lower bound. About 40% of rows here are censored. Averaging `duration_months` naively would be badly wrong, and BreezeML's survival tools will refuse to let a regression model near this data for exactly that reason.
+
+## The Kaplan-Meier curve
+
+The classic tool that handles censoring correctly. It answers: *what fraction of patients are still event-free at each point in time?* Every censored patient contributes exactly what we know about them (they survived at least this long) and nothing we do not."""),
+            code("""km = survival.kaplan_meier(df, "duration_months", "event")"""),
+            md("""## Does the new drug actually help?
+
+Fit one curve per treatment group and test whether the gap between them is real or luck. The **log-rank test** is the standard answer, and it also respects censoring:"""),
+            code("""groups = survival.groups_kaplan_meier(df, "duration_months", "event", "group")"""),
+            md("""The p-value is tiny: the separation between the curves is not luck. Patients on the new drug stay event-free substantially longer. (We planted this effect in the synthetic generator, so we know the test found something real.)
+
+## What to remember
+
+- If the clock is still running for some rows, means and regressions lie. Check for censoring first.
+- Kaplan-Meier gives the honest "still fine at time t" curve; log-rank tests whether two curves genuinely differ.
+- The `event` column is sacred. Losing it, or treating censored times as true times, silently corrupts everything downstream."""),
+            FOOTER,
+        ],
+    },
+    # ----------------------------------------------------------- 8: causal
+    "campaign-that-lied": {
+        "title": "The Campaign That Lied: Correlation vs Causation",
+        "file": "nb8_causal.ipynb",
+        "cells": [
+            md("""# The Campaign That Lied: Correlation vs Causation
+
+Marketing runs an email campaign. Customers who got the email spent \\$18 more than those who did not. The team books \\$18 per customer as campaign impact and asks for budget.
+
+The number is real. The conclusion is wrong.
+
+Who received the campaign? Mostly the already-engaged customers, because that is who marketing targets. Engaged customers spend more *anyway*. Part of that \\$18 is the email; part is just who got it. Confusing the two is the most expensive analytics mistake in business, because it systematically flatters every intervention.
+
+This data is synthetic and we planted the truth inside: the campaign's real effect is about \\$12. Let's see if honest methods can recover it without being told.
+
+*Turn Internet ON in the right sidebar.*"""),
+            INSTALL,
+            code(loader("from breezeml import causal") + """
+
+df = load("ab_campaign.csv")
+df.groupby("treated")["spend_next_month"].mean().round(2)"""),
+            md("""## First, check whether this was a fair comparison
+
+If treatment had been assigned randomly, the treated and untreated groups would look alike on every feature. Were they?"""),
+            code("""balance = causal.check_confounding(df, treatment="treated", outcome="spend_next_month")"""),
+            md("""No. The treated group is visibly more engaged, exactly the imbalance that inflates naive comparisons. This one check tells you whether you can trust a simple difference in means. Here, you cannot.
+
+## The naive estimate vs the adjusted one
+
+The naive method is what the marketing slide did: mean(treated) minus mean(untreated). The **T-learner** does something smarter: it trains one model to predict spending for treated customers and another for untreated, then asks both models about every customer, comparing like with like:"""),
+            code("""naive = causal.estimate_ate(df, treatment="treated", outcome="spend_next_month", method="naive")"""),
+            code("""adjusted = causal.estimate_ate(df, treatment="treated", outcome="spend_next_month", method="t_learner")"""),
+            md("""The naive estimate reads roughly \\$18.6. The adjusted estimate reads roughly \\$12, which is the true effect we planted. The \\$6.6 gap is pure confounding: money the campaign would have been credited for, earned by customers who were going to spend anyway.
+
+BreezeML reports both numbers side by side on purpose. The honest deliverable is not "the effect is \\$12," it is "the raw gap is \\$18.6, of which about \\$12 survives adjustment for who got targeted."
+
+## What to remember
+
+- "Treated customers did better" is not "treatment worked." Ask who got treated, and why.
+- Run `check_confounding` before trusting any before/after or with/without comparison.
+- Adjusted estimates beat naive ones, but no method beats an actual randomized test. When the stakes are high, run the A/B test."""),
+            FOOTER,
+        ],
+    },
+    # ----------------------------------------------- 9: clustering/anomaly
+    "groups-and-oddballs": {
+        "title": "Finding Groups and Oddballs in Your Data",
+        "file": "nb9_clusters_anomalies.ipynb",
+        "cells": [
+            md("""# Finding Groups and Oddballs in Your Data
+
+No labels this time. Just 3,000 customers and what they spend across five categories. Two questions that come up constantly in practice:
+
+1. Do these customers fall into natural **groups** we could serve differently?
+2. Are any of them **oddballs** whose behavior fits no group at all: fraud, bots, data errors, or simply whales?
+
+This is unsupervised learning, and it is where overconfident conclusions flourish, because with no labels there is no score to keep you honest. So we will keep score anyway, with a silhouette metric for the groups and a multi-detector consensus for the oddballs.
+
+*Turn Internet ON in the right sidebar.*"""),
+            INSTALL,
+            code(loader("from breezeml import clustering, anomaly") + """
+
+df = load("customer_segments.csv")
+df.describe().round(0)"""),
+            md("""## Finding the groups
+
+K-means, the workhorse: pick k, it finds k centers and assigns every customer to the nearest. The **silhouette score** (between -1 and 1) measures how cleanly separated the result is; above 0.5 usually means the structure is real, near 0 means you imposed groups on smoke."""),
+            code("""result = clustering.kmeans(df, n_clusters=4)
+print("silhouette:", round(result["silhouette"], 3))
+
+import pandas as pd
+centers = pd.DataFrame(result["centers"], columns=df.columns).round(0)
+centers"""),
+            md("""Read the centers like customer portraits: one group lives at the grocery store, one spends on dining and going out, one on travel, one on electronics. Four real behavioral tribes (we planted them in the generator, and k-means recovered them cleanly).
+
+A practical honesty tip: always compare the silhouette at several values of k. If k=4 is not clearly better than k=3 and k=5, the "four tribes" story is weaker than the slide deck will make it look.
+
+## Finding the oddballs
+
+Anomaly detection has a dirty secret: different detectors disagree, a lot. One flags the top spenders, another flags unusual ratios. Trusting a single detector means trusting its blind spots. So run four at once and see where they **agree**:"""),
+            code("""result = anomaly.compare(df, contamination=0.02)"""),
+            md("""The unanimous set, flagged by all four detectors, is the list worth a human's time. (The generator planted 2% extreme spenders; the consensus finds them.) The rows only one detector flagged are usually that detector's personality, not a real anomaly.
+
+## What to remember
+
+- Unsupervised has no accuracy score, so bring your own honesty: silhouette for clusters, consensus for anomalies.
+- Read cluster centers as portraits and sanity-check them against domain knowledge. If a cluster has no story, it might be an artifact.
+- Investigate the unanimous anomalies first. Agreement across different algorithms is the closest thing to evidence this field offers."""),
+            FOOTER,
+        ],
+    },
+    # ------------------------------------------------------- 10: timeseries
+    "honest-forecasting": {
+        "title": "Honest Forecasting: Beat Naive or Admit It",
+        "file": "nb10_forecasting.ipynb",
+        "cells": [
+            md("""# Honest Forecasting: Beat Naive or Admit It
+
+Forecasting has a humiliating open secret: the dumbest possible forecast, *"tomorrow will be like today,"* is shockingly hard to beat. Whole data science teams have shipped models that quietly lose to it.
+
+That dumb forecast is called the **naive baseline**, and any forecasting result that does not report it is hiding something. BreezeML makes the comparison mandatory: every forecasting model is scored against naive, and the report says plainly whether you beat it.
+
+Three years of daily store sales, with trend, weekly rhythm, seasonal swings, and promo spikes. Let's forecast honestly.
+
+*Turn Internet ON in the right sidebar.*"""),
+            INSTALL,
+            code(loader("from breezeml import timeseries") + """
+
+df = load("store_sales.csv")
+df.tail()"""),
+            md("""## The honest evaluation: walk-forward
+
+You cannot shuffle time. A random train/test split would let the model peek at the future, which is leakage wearing a calendar. **Walk-forward validation** does what production does: train on the past, predict the next stretch, slide forward, repeat.
+
+`compare()` runs every forecasting model through walk-forward validation, and always includes the naive baseline in the race:"""),
+            code("""leaderboard = timeseries.compare(df, "sales", date_col="date")
+
+import pandas as pd
+pd.DataFrame(leaderboard)"""),
+            md("""Read the honest columns: `skill_vs_naive` is the fraction of the naive forecast's error a model eliminates (0 means no better than naive, and it happens more than anyone admits), and `beats_naive` is the blunt verdict. Here the real models genuinely win, because this series has learnable structure: weekly rhythm, trend, promo effects.
+
+When `beats_naive` comes up False on your own data, that is not a failed project. That is the library saving you from shipping a complicated way to say "same as yesterday."
+
+## Forecast the next two weeks"""),
+            code("""model, forecast, report = timeseries.forecast(df, "sales", horizon=14, date_col="date")
+forecast.round(0)"""),
+            md("""Behind that call: leakage-free lag and rolling-window features, walk-forward validation, and the naive comparison baked into the report. The forecast extends recent structure, it does not hallucinate.
+
+## What to remember
+
+- Never evaluate a forecast with a shuffled split. Walk-forward or nothing.
+- Report skill against the naive baseline, always. If you cannot beat "tomorrow equals today," say so and ship the naive forecast; it is free.
+- Weekly and yearly rhythms carry most of the signal in business series. Capture those before reaching for anything exotic."""),
             FOOTER,
         ],
     },

@@ -57,3 +57,4 @@ models_v18/
 
 # playground generated data (regenerate with examples/playground/generate_data.py)
 examples/playground/data/
+examples/playground/notebooks/
