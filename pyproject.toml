@@ -6,8 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "breezeml"
 version = "2.0.0"
 authors = [
-  { name="Akash Anipakalu Giridhar" },
-  { name="Akash Anipakalu Giridhar", email="akashagakash@gmail.com" }
+  { name="Akash Anipakalu Giridhar" }
 ]
 description = "A beginner-friendly, production-aware ML workflow layer for students, analysts, and AI agents: train, compare, explain, export, and deploy scikit-learn models without the boilerplate."
 readme = "README.md"
