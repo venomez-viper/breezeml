@@ -54,3 +54,6 @@ models_v18/
 /model.joblib
 /deployment/
 .breezeml/
+
+# playground generated data (regenerate with examples/playground/generate_data.py)
+examples/playground/data/
